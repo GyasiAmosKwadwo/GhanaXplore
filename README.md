@@ -1,22 +1,21 @@
-# Backend Service Template
+# GhanaXplore
 
-A reusable, production-ready FastAPI backend starter with layered architecture, auth/RBAC foundations, async workers, and infrastructure defaults.
+A reusable, production-ready FastAPI backend for GhanaXplore with layered architecture, auth/RBAC foundations, async workers, and infrastructure defaults.
 
-## Template Setup Guide
+## Project Setup Guide
 
-If you want to use this architecture as a reusable starter for future projects, follow:
+If you want to adapt this architecture for future projects, follow:
 
-- `TEMPLATE_README.md` for the end-to-end template workflow
+- `TEMPLATE_README.md` for the bootstrap and migration workflow
 - `.env.example` for environment variable setup
 
 ## Domain-Specific Notes
 
-Some modules in this bootstrap are domain examples (for example, parts of `app/integrations` and vetting/report workflows). Keep what you need and replace/remove the rest for your product domain.
+Some modules in this bootstrap are domain examples. Keep what you need and replace/remove the rest for the GhanaXplore product domain.
 
 ## 🚀 Features
 
-- **Multi-Role Authentication**: Administrator, Client, and Applicant roles with RBAC
-- **2FA Security**: SMS and Google Authenticator support
+- **Multi-Role Authentication**: Tourist, Operator, Guide, Community Host, Attraction Manager, Government, Investor, and Administrator roles with RBAC
 - **Async Processing**: RabbitMQ + Celery for background tasks
 - **Real-time Caching**: Redis for session management and caching
 - **External Integrations**:
@@ -41,8 +40,8 @@ Some modules in this bootstrap are domain examples (for example, parts of `app/i
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-org/backend-template.git
-cd backend-template
+git clone https://github.com/your-org/ghanaxplore.git
+cd ghanaxplore
 ```
 
 ### 2. Environment Setup
@@ -89,22 +88,6 @@ make seed
 - Token blacklisting on logout
 - Account lockout after failed attempts
 
-### Two-Factor Authentication
-
-```python
-# Enable TOTP 2FA
-POST /api/v1/auth/2fa/setup
-Response: {
-    "secret": "BASE32SECRET",
-    "qr_code": "base64_encoded_qr",
-    "backup_codes": ["CODE1", "CODE2", ...]
-}
-
-# Verify 2FA code
-POST /api/v1/auth/2fa/verify
-Body: {"code": "123456"}
-```
-
 ### Password Requirements
 
 - Minimum 8 characters
@@ -120,9 +103,6 @@ Body: {"code": "123456"}
 POST   /api/v1/auth/login          # Login
 POST   /api/v1/auth/logout         # Logout
 POST   /api/v1/auth/refresh        # Refresh token
-POST   /api/v1/auth/2fa/setup      # Setup 2FA
-POST   /api/v1/auth/2fa/verify     # Verify 2FA
-POST   /api/v1/auth/2fa/enable     # Enable 2FA
 ```
 
 ### Applications
@@ -151,7 +131,7 @@ POST   /api/v1/admin/users         # Create user
 GET    /api/v1/admin/users         # List users
 PATCH  /api/v1/admin/users/:id     # Update user
 DELETE /api/v1/admin/users/:id     # Delete user
-POST   /api/v1/admin/clients       # Create client
+POST   /api/v1/admin/operators     # Onboard tourism operators
 GET    /api/v1/admin/audit-logs    # View audit logs
 ```
 
@@ -369,8 +349,8 @@ make test
 For issues and questions:
 
 - **Issues**: GitHub Issues
-<!-- - **Email**: support@backend-template.com
-- **Documentation**: [docs.backend-template.com](https://docs.backend-template.com) -->
+<!-- - **Email**: support@ghanaxplore.com
+- **Documentation**: [docs.ghanaxplore.com](https://docs.ghanaxplore.com) -->
 
 ## 🎯 Roadmap
 
@@ -405,8 +385,8 @@ For issues and questions:
 
 ```bash
 # 1. Clone and setup
-git clone https://github.com/your-org/backend-template.git
-cd backend-template
+git clone https://github.com/your-org/ghanaxplore.git
+cd ghanaxplore
 cp .env.example .env
 
 # 2. Start services

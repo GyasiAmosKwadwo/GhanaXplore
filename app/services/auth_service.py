@@ -21,9 +21,9 @@ class AuthService:
 
     async def authenticate_user(
         self, email: str, password: str
-    ) -> Tuple[Optional[User], bool, bool]:
+    ) -> Tuple[Optional[User], bool]:
         """
-        Authenticate user and return (user, requires_2fa, is_first_time)
+        Authenticate user and return (user, is_first_time)
         """
         user = await self.user_repo.get_by_email(email)
 
@@ -67,17 +67,14 @@ class AuthService:
         # Reset failed attempts
         await self.user_repo.update_last_login(user.id)
 
-        # Check if 2FA is required
-        requires_2fa = user.two_factor_enabled
-
-        return user, requires_2fa, is_first_time
+        return user, is_first_time
 
     async def create_session(
         self, user: User, ip_address: str, user_agent: str, is_first_time: bool = False
     ) -> LoginResponse:
         """Create user session and return tokens"""
         # Create tokens
-        token_data = {"sub": str(user.id), "email": user.email, "role": user.role}
+        token_data = {"sub": str(user.id), "email": user.email, "role": user.role.value}
         access_token = self.security.create_access_token(token_data)
         refresh_token = self.security.create_refresh_token(token_data)
 
@@ -97,7 +94,6 @@ class AuthService:
         return LoginResponse(
             access_token=access_token,
             refresh_token=refresh_token,
-            requires_2fa=False,
             is_first_time=is_first_time,
         )
 

@@ -24,8 +24,8 @@ from loguru import logger
 
 from app.api.v1.router import api_router
 from app.core.config import settings
-from app.core.database import init_db
 from app.core.logging import setup_logging
+from app.core.database import init_db
 
 
 # build safe lists manually so TrustedHost/CORS don't depend on Settings parsing
@@ -52,8 +52,13 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info(f"Starting {settings.APP_NAME}...")
     setup_logging()
-    await init_db()
-    logger.info("Database initialized")
+    if settings.DB_AUTO_CREATE_TABLES:
+        await init_db()
+        logger.warning(
+            "DB_AUTO_CREATE_TABLES is enabled; schema was created with SQLAlchemy for bootstrap only."
+        )
+    else:
+        logger.info("Skipping auto schema creation; use Alembic migrations instead.")
 
     yield
 
@@ -63,7 +68,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title=settings.APP_NAME,
-    description="Reusable FastAPI backend template",
+    description="GhanaXplore backend API",
     version=settings.API_VERSION,
     docs_url=f"/docs",
     redoc_url=f"/api/{settings.API_VERSION}/redoc",

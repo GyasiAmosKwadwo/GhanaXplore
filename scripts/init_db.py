@@ -1,18 +1,23 @@
 import asyncio
+from pathlib import Path
 
+from alembic import command
+from alembic.config import Config
 from loguru import logger
 
-from app.core.database import init_db
+ROOT = Path(__file__).resolve().parents[1]
+ALEMBIC_INI = ROOT / "alembic.ini"
 
 
 async def initialize_database():
-    """Initialize database tables"""
+    """Apply Alembic migrations to initialize the database schema."""
     try:
-        logger.info("Initializing database...")
-        await init_db()
-        logger.info("Database initialized successfully!")
+        logger.info("Applying Alembic migrations...")
+        alembic_cfg = Config(str(ALEMBIC_INI))
+        command.upgrade(alembic_cfg, "head")
+        logger.info("Database schema is up to date!")
     except Exception as e:
-        logger.error(f"Error initializing database: {e}")
+        logger.error(f"Error applying migrations: {e}")
         raise
 
 

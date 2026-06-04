@@ -1,11 +1,11 @@
-# Backend Template Guide
+# GhanaXplore Bootstrap Guide
 
-This repository is a reusable FastAPI backend template for new products.
+This repository is the reusable FastAPI backend foundation for GhanaXplore.
 
 Use this guide to:
 1. Start a new backend quickly.
 2. Understand what is already included.
-3. Customize the template safely for your own domain.
+3. Customize the foundation safely for the GhanaXplore domain.
 
 ## What This Template Already Includes
 
@@ -20,7 +20,6 @@ Use this guide to:
   - JWT session flow
   - Role-based access control (roles and permissions)
   - Password reset flow
-  - 2FA endpoints (TOTP/SMS flow support)
 - Async workers with Celery + RabbitMQ.
 - Redis for sessions/cache.
 - PostgreSQL with Alembic migrations.
@@ -76,14 +75,13 @@ Default seeded admin credentials:
 - Password: `Admin@123`
 
 Important:
-- Seed scripts now enable TOTP 2FA for admin users.
-- `make seed` logs the admin TOTP secret so you can add it to Google Authenticator (or any TOTP app) before login verification.
+- `make seed` creates the default admin user if it does not already exist.
 
 ## API Surface Included By Default
 
 All routes are mounted under `/api/v1`.
 
-- `/auth` for login and 2FA actions
+- `/auth` for login and logout
 - `/password` for forgot/reset/change flows
 - `/roles` for role and permission management
 - `/notifications` for notification operations
@@ -147,7 +145,7 @@ make seed-permissions
 3. Auth and access policy:
 - Define your real role catalog and permissions.
 - Update seed scripts for your org’s initial users/roles.
-- Tune lockout/session/2FA policies in config.
+- Tune lockout and session policies in config.
 
 4. Infrastructure profile:
 - Keep only required services in `docker-compose.yml`.
@@ -182,7 +180,6 @@ make seed-permissions
 ## Troubleshooting Notes
 
 - If migrations fail with host resolution errors, run migrations through the provided Makefile commands (they execute inside Docker where service hostnames resolve).
-- If login returns `Login is only permitted for users with 2FA enabled.`, re-run `make seed` to ensure seeded admin 2FA fields are set.
 - If role/permission seeding was partially run, `make seed-permissions` is idempotent and safe to rerun.
 
 ## Final Notes

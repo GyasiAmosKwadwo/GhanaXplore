@@ -1,12 +1,12 @@
 services:
   # Render Key Value (Redis-compatible)
   - type: keyvalue
-    name: redis-cache
+    name: ghanaxplore-redis
     plan: starter
 
   # FastAPI Web Service
   - type: web
-    name: fastapi-app
+    name: ghanaxplore-api
     runtime: python
     pythonVersion: 3.11
     buildCommand: pip install -r requirements.txt
@@ -25,17 +25,17 @@ services:
       - key: CELERY_BROKER_URL
         fromService:
           type: keyvalue
-          name: redis-cache
+          name: ghanaxplore-redis
           property: connectionString
       - key: CELERY_RESULT_BACKEND
         fromService:
           type: keyvalue
-          name: redis-cache
+          name: ghanaxplore-redis
           property: connectionString
       - key: REDIS_URL
         fromService:
           type: keyvalue
-          name: redis-cache
+          name: ghanaxplore-redis
           property: connectionString
       - key: DATABASE_URL
         fromDatabase:
@@ -76,7 +76,7 @@ services:
 
   # Celery Worker
   - type: worker
-    name: celery-worker
+    name: ghanaxplore-worker
     runtime: python
     pythonVersion: 3.11
     buildCommand: pip install -r requirements.txt
@@ -92,17 +92,17 @@ services:
       - key: CELERY_BROKER_URL
         fromService:
           type: keyvalue
-          name: redis-cache
+          name: ghanaxplore-redis
           property: connectionString
       - key: CELERY_RESULT_BACKEND
         fromService:
           type: keyvalue
-          name: redis-cache
+          name: ghanaxplore-redis
           property: connectionString
       - key: REDIS_URL
         fromService:
           type: keyvalue
-          name: redis-cache
+          name: ghanaxplore-redis
           property: connectionString
       - key: DATABASE_URL
         fromDatabase:
@@ -123,47 +123,47 @@ services:
       - key: SECRET_KEY
         fromService:
           type: web
-          name: fastapi-app
+          name: ghanaxplore-api
           envVarKey: SECRET_KEY
       - key: JWT_SECRET_KEY
         fromService:
           type: web
-          name: fastapi-app
+          name: ghanaxplore-api
           envVarKey: JWT_SECRET_KEY
       - key: REDIS_PASSWORD
         fromService:
           type: web
-          name: fastapi-app
+          name: ghanaxplore-api
           envVarKey: REDIS_PASSWORD
       - key: SMTP_HOST
         fromService:
           type: web
-          name: fastapi-app
+          name: ghanaxplore-api
           envVarKey: SMTP_HOST
       - key: SMTP_PORT
         fromService:
           type: web
-          name: fastapi-app
+          name: ghanaxplore-api
           envVarKey: SMTP_PORT
       - key: SMTP_USER
         fromService:
           type: web
-          name: fastapi-app
+          name: ghanaxplore-api
           envVarKey: SMTP_USER
       - key: SMTP_PASSWORD
         fromService:
           type: web
-          name: fastapi-app
+          name: ghanaxplore-api
           envVarKey: SMTP_PASSWORD
       - key: EMAIL_FROM
         fromService:
           type: web
-          name: fastapi-app
+          name: ghanaxplore-api
           envVarKey: EMAIL_FROM
 
   # Flower (Celery Monitoring - Optional)
   - type: web
-    name: flower-monitor
+    name: ghanaxplore-flower
     runtime: python
     pythonVersion: 3.11
     buildCommand: pip install -r requirements.txt
@@ -172,12 +172,12 @@ services:
       - key: CELERY_BROKER_URL
         fromService:
           type: web
-          name: fastapi-app
+          name: ghanaxplore-api
           envVarKey: CELERY_BROKER_URL
       - key: CELERY_RESULT_BACKEND
         fromService:
           type: web
-          name: fastapi-app
+          name: ghanaxplore-api
           envVarKey: CELERY_RESULT_BACKEND
 
 databases:

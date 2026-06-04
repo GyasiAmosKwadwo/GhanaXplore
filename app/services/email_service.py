@@ -2,7 +2,7 @@ from loguru import logger
 
 
 class EmailService:
-    """Minimal email service placeholder for template bootstrap."""
+    """Minimal email service placeholder for GhanaXplore bootstrap."""
 
     def send_password_reset_code_email(
         self, to_email: str, user_name: str, reset_code: str, ip_address: str, user_agent: str

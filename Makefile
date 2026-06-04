@@ -20,7 +20,7 @@ help:
 	@echo "  make format        - Format code"
 	@echo "  make migrate       - Run database migrations"
 	@echo "  make seed          - Seed database with initial data"
-	@echo '${GREEN}Backend Template - Available Commands${RESET}'
+	@echo '${GREEN}GhanaXplore - Available Commands${RESET}'
 	@echo ''
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "${YELLOW}%-20s${RESET} %s\n", $$1, $$2}'
 
@@ -69,9 +69,9 @@ ps: ## List running containers
 # ============================================================================
 # Database Commands
 # ============================================================================
-init-db: ## Initialize database tables
+init-db: ## Apply Alembic migrations
 	docker-compose exec -T -u $$(id -u):$$(id -g) -e PYTHONPATH=/app api python scripts/init_db.py
-	@echo "${GREEN}Database initialized!${RESET}"
+	@echo "${GREEN}Database migrations applied!${RESET}"
 
 migrate: ## Run database migrations
 	docker-compose exec -T -u $$(id -u):$$(id -g) api alembic upgrade head
@@ -306,7 +306,7 @@ create-admin: ## Create admin user interactively
 # ============================================================================
 quick-start: install up init-db migrate seed seed-permissions ## Quick start for new setup
 	@echo "${GREEN}==================================================${RESET}"
-	@echo "${GREEN}Backend Template is ready!${RESET}"
+	@echo "${GREEN}GhanaXplore is ready!${RESET}"
 	@echo "${GREEN}==================================================${RESET}"
 	@echo ""
 	@echo "API: http://localhost:8000"

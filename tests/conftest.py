@@ -11,7 +11,7 @@ from app.core.cache import get_redis
 from app.core.database import Base, get_db
 from app.core.security import SecurityService
 from app.main import app
-from app.models.user import User
+from app.models.user import User, UserRole
 
 # Test database URL
 TEST_DATABASE_URL = "postgresql+asyncpg://test_user:test_pass@localhost:5432/test_db"
@@ -81,7 +81,7 @@ async def test_user(db_session: AsyncSession) -> User:
         hashed_password=security.get_password_hash("Test123!"),
         first_name="Test",
         last_name="User",
-        role="applicant",
+        role=UserRole.TOURIST,
         is_active=True,
         is_verified=True,
     )
@@ -100,7 +100,7 @@ async def test_admin(db_session: AsyncSession) -> User:
         hashed_password=security.get_password_hash("Admin123!"),
         first_name="Admin",
         last_name="User",
-        role="administrator",
+        role=UserRole.ADMINISTRATOR,
         is_active=True,
         is_verified=True,
     )

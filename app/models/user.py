@@ -13,10 +13,14 @@ from app.models.role import user_roles
 
 
 class UserRole(str, enum.Enum):
+    TOURIST = "tourist"
+    OPERATOR = "operator"
+    GUIDE = "guide"
+    COMMUNITY_HOST = "community_host"
+    ATTRACTION_MANAGER = "attraction_manager"
+    GOVERNMENT = "government"
+    INVESTOR = "investor"
     ADMINISTRATOR = "administrator"
-    APPLICANT = "applicant"
-    #STAFF = "staff"
-    #AGENCY = "agency"
 
 
 class User(Base):
@@ -31,14 +35,9 @@ class User(Base):
     last_name = Column(String(100), nullable=False)
     phone_number = Column(String(20))
 
-    role = Column(Enum(UserRole), nullable=False, default=UserRole.APPLICANT)
+    role = Column(Enum(UserRole), nullable=False, default=UserRole.TOURIST)
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
-
-    # 2FA
-    two_factor_enabled = Column(Boolean, default=False)
-    two_factor_secret = Column(String(32), nullable=True)
-    two_factor_method = Column(String(20), nullable=True)  # 'sms' or 'totp'
 
     # Session tracking
     last_login = Column(DateTime(timezone=True), nullable=True)

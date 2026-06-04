@@ -8,12 +8,13 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # Application
-    APP_NAME: str = "Backend Template"
+    APP_NAME: str = "GhanaXplore"
     APP_ENV: str = "development"
     DEBUG: bool = True
     SECRET_KEY: str
     API_VERSION: str = "v1"
     ALLOWED_EXTENSIONS: str = "pdf,jpg,jpeg,png,doc,docx"
+    DB_AUTO_CREATE_TABLES: bool = False
 
     # ALLOWED_HOSTS: List[str] = ["localhost", "127.0.0.1"]
 
@@ -42,18 +43,21 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
-    # 2FA
-    TWILIO_ACCOUNT_SID: Optional[str] = None
-    TWILIO_AUTH_TOKEN: Optional[str] = None
-    TWILIO_PHONE_NUMBER: Optional[str] = None
-    OTP_EXPIRE_MINUTES: int = 5
-
-    # External APIs
-    XDS_DATA_API_KEY: Optional[str] = None
-    XDS_DATA_BASE_URL: Optional[str] = None
-    GHANA_CARD_API_KEY: Optional[str] = None
-    GHANA_CARD_BASE_URL: Optional[str] = None
-    GHANA_POST_GPS_BASE_URL: Optional[str] = None
+    # GhanaXplore integrations
+    PAYSTACK_PUBLIC_KEY: Optional[str] = None
+    PAYSTACK_SECRET_KEY: Optional[str] = None
+    PAYSTACK_WEBHOOK_SECRET: Optional[str] = None
+    MTN_MOMO_API_USER: Optional[str] = None
+    MTN_MOMO_API_KEY: Optional[str] = None
+    MTN_MOMO_SUBSCRIPTION_KEY: Optional[str] = None
+    MTN_MOMO_BASE_URL: Optional[str] = None
+    SMS_PROVIDER: Optional[str] = None
+    SMS_API_KEY: Optional[str] = None
+    SMS_SENDER_ID: Optional[str] = None
+    FCM_SERVER_KEY: Optional[str] = None
+    CLOUDINARY_CLOUD_NAME: Optional[str] = None
+    CLOUDINARY_API_KEY: Optional[str] = None
+    CLOUDINARY_API_SECRET: Optional[str] = None
     GOOGLE_MAPS_API_KEY: Optional[str] = None
 
     # File Upload
@@ -84,7 +88,7 @@ class Settings(BaseSettings):
     MAX_LOGIN_ATTEMPTS: int = 5
     LOCKOUT_DURATION_MINUTES: int = 30
 
-    SUPPORT_EMAIL: str = "support@example.com"
+    SUPPORT_EMAIL: str = "support@ghanaxplore.com"
 
     # CORS
     # CORS_ORIGINS: str = ["http://localhost:3000"]
@@ -133,6 +137,14 @@ class Settings(BaseSettings):
 @lru_cache()
 def get_settings() -> Settings:
     for k in ("CORS_ORIGINS", "ALLOWED_HOSTS", "ALLOWED_EXTENSIONS"):
+        if k in os.environ and os.environ.get(k, "").strip() == "":
+            os.environ.pop(k, None)
+    debug_value = os.environ.get("DEBUG")
+    if debug_value is not None:
+        normalized = debug_value.strip().lower()
+        if normalized not in {"1", "true", "yes", "on", "0", "false", "no", "off"}:
+            os.environ.pop("DEBUG", None)
+    for k in ("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_PHONE_NUMBER"):
         if k in os.environ and os.environ.get(k, "").strip() == "":
             os.environ.pop(k, None)
     return Settings()

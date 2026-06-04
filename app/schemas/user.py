@@ -47,7 +47,6 @@ class UserInDB(UserBase):
     id: uuid.UUID
     is_active: bool
     is_verified: bool
-    two_factor_enabled: bool
     last_login: Optional[datetime]
     created_at: datetime
     updated_at: datetime
@@ -64,7 +63,6 @@ class UserResponse(BaseModel):
     phone_number: Optional[str]
     role: UserRole
     is_active: bool
-    two_factor_enabled: bool
     last_login: Optional[datetime]
 
     class Config:
