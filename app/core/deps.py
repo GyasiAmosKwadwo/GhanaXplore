@@ -70,3 +70,17 @@ async def get_current_active_admin(current_user: User = Depends(get_current_user
     if current_user.role != UserRole.ADMINISTRATOR:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough privileges")
     return current_user
+
+
+async def require_verified_operator(current_user: User = Depends(get_current_user)) -> User:
+    """Require a verified operator account."""
+    if current_user.role != UserRole.OPERATOR:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Operator access only")
+
+    if not current_user.is_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Operator account is pending verification",
+        )
+
+    return current_user

@@ -9,7 +9,13 @@ from app.core.deps import get_db
 from app.core.permissions import require_permission
 from app.models.user import User, UserRole
 from app.repositories.user_repository import UserRepository
-from app.schemas.user import UserResponse, UserRoleUpdate, UsersListResponse, UserStatusUpdate
+from app.schemas.user import (
+    OperatorVerificationUpdate,
+    UserResponse,
+    UserRoleUpdate,
+    UsersListResponse,
+    UserStatusUpdate,
+)
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -34,6 +40,28 @@ async def update_user_status(
 
     await user_repo.update(user_id, data.dict(exclude_unset=True))
     return user
+
+
+@router.patch("/operators/{user_id}/verification", response_model=UserResponse)
+async def update_operator_verification(
+    user_id: uuid.UUID,
+    data: OperatorVerificationUpdate,
+    current_user: User = Depends(require_permission("user.update")),
+    db: AsyncSession = Depends(get_db),
+):
+    user_repo = UserRepository(db)
+    user = await user_repo.get_by_id(user_id)
+
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    if user.role != UserRole.OPERATOR:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Only operator accounts can be verified"
+        )
+
+    await user_repo.update(user_id, {"is_verified": data.is_verified})
+    return await user_repo.get_by_id(user_id)
 
 
 @router.patch("/users/{user_id}/role", response_model=UserResponse)

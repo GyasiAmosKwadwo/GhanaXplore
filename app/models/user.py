@@ -1,7 +1,8 @@
 import enum
 import uuid
 
-from sqlalchemy import Boolean, Column, DateTime, Enum, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, Integer, String
+from sqlalchemy.types import TypeDecorator
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -35,7 +36,45 @@ class User(Base):
     last_name = Column(String(100), nullable=False)
     phone_number = Column(String(20))
 
-    role = Column(Enum(UserRole), nullable=False, default=UserRole.TOURIST)
+    class FlexibleEnum(TypeDecorator):
+        impl = String
+
+        def __init__(self, enum_cls, *args, **kwargs):
+            self.enum_cls = enum_cls
+            super().__init__(*args, **kwargs)
+
+        def process_bind_param(self, value, dialect):
+            if value is None:
+                return None
+            if isinstance(value, self.enum_cls):
+                return value.value
+            if isinstance(value, str):
+                # accept either the enum value or the enum name
+                try:
+                    return self.enum_cls(value).value
+                except ValueError:
+                    try:
+                        return self.enum_cls[value].value
+                    except Exception:
+                        return value
+
+        def process_result_value(self, value, dialect):
+            if value is None:
+                return None
+            # Map stored DB value (could be name or value) back to enum
+            try:
+                return self.enum_cls(value)
+            except ValueError:
+                try:
+                    return self.enum_cls[value]
+                except Exception:
+                    # fallback: try lowercase
+                    try:
+                        return self.enum_cls(value.lower())
+                    except Exception:
+                        return value
+
+    role = Column(FlexibleEnum(UserRole), nullable=False, default=UserRole.TOURIST)
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
 
@@ -54,3 +93,9 @@ class User(Base):
         cascade="all, delete-orphan",
     )
     roles = relationship("Role", secondary=user_roles, back_populates="users")
+    operator_profile = relationship(
+        "OperatorProfile", back_populates="user", uselist=False, cascade="all, delete-orphan"
+    )
+    tourist_profile = relationship(
+        "TouristProfile", back_populates="user", uselist=False, cascade="all, delete-orphan"
+    )

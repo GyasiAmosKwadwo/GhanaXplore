@@ -5,6 +5,7 @@ from app.api.v1.endpoints import (
     auth,
     notifications,
     password,
+    profiles,
     roles,
     users,
 )
@@ -21,6 +22,9 @@ api_router.include_router(roles.router)
 
 # Notifications
 api_router.include_router(notifications.router)
+
+# Profiles
+api_router.include_router(profiles.router)
 
 # Admin
 api_router.include_router(admin.router)

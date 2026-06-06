@@ -8,8 +8,10 @@ import app.models.booking
 import app.models.community_experience
 import app.models.event
 import app.models.guide_profile
+import app.models.operator_profile
 import app.models.offline_bundle
 import app.models.payment
 import app.models.review
+import app.models.tourist_profile
 import app.models.tour_package
 import app.models.user
