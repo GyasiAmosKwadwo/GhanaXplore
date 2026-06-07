@@ -31,6 +31,11 @@ class UserCreate(UserBase):
 
 class UserStatusUpdate(BaseModel):
     is_active: Optional[bool] = None
+    is_verified: Optional[bool] = None
+
+
+class OperatorVerificationUpdate(BaseModel):
+    is_verified: bool
 
 
 class UserRoleUpdate(BaseModel):
@@ -63,6 +68,7 @@ class UserResponse(BaseModel):
     phone_number: Optional[str]
     role: UserRole
     is_active: bool
+    is_verified: bool
     last_login: Optional[datetime]
 
     class Config:
