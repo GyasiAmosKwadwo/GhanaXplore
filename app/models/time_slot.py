@@ -21,3 +21,4 @@ class TimeSlot(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
 
     attraction = relationship("Attraction", back_populates="time_slots")
+    bookings = relationship("Booking", back_populates="time_slot")

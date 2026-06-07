@@ -25,6 +25,9 @@ class Booking(Base):
     guide_id = Column(
         UUID(as_uuid=True), ForeignKey("guide_profiles.id", ondelete="SET NULL"), nullable=True
     )
+    time_slot_id = Column(
+        UUID(as_uuid=True), ForeignKey("time_slots.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     booking_reference = Column(String(64), unique=True, nullable=False, index=True)
     booking_date = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     visit_date = Column(Date, nullable=False, index=True)
@@ -38,6 +41,7 @@ class Booking(Base):
 
     tourist = relationship("User")
     attraction = relationship("Attraction")
+    time_slot = relationship("TimeSlot")
     tour_package = relationship("TourPackage", back_populates="bookings")
     guide = relationship("GuideProfile", back_populates="bookings")
     payment = relationship("Payment", back_populates="booking", uselist=False)

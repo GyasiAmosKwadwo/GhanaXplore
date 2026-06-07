@@ -41,7 +41,7 @@ class AttractionService:
             excludes=data.excludes,
             cancellation_policy=data.cancellation_policy,
             special_requirements=data.special_requirements,
-            metadata=data.metadata,
+            metadata_=data.metadata,
             is_offline_available=data.is_offline_available or False,
             operator_id=user.id,
         )
@@ -111,6 +111,8 @@ class AttractionService:
 
         restricted_keys = {"operator_id", "approval_status"}
         update_data = {k: v for k, v in data.items() if k not in restricted_keys}
+        if "metadata" in update_data:
+            update_data["metadata_"] = update_data.pop("metadata")
 
         updated_attraction = await self.repo.update(attraction_id, update_data)
         if not updated_attraction:

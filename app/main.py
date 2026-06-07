@@ -111,9 +111,7 @@ async def health_check():
 # Include versioned API router
 app.include_router(api_router, prefix=f"/api/{settings.API_VERSION}")
 
-# Include template compatibility routes (unversioned)
-from app.api.compat import compat_router
-app.include_router(compat_router)
+
 
 
 

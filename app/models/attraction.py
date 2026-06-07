@@ -39,6 +39,8 @@ class Attraction(Base):
     cancellation_policy = Column(Text, nullable=True)
     special_requirements = Column(Text, nullable=True)
     metadata_ = Column("metadata", JSON, nullable=False, default=dict)
+    # NOTE: removed reserved SQLAlchemy Declarative 'metadata' conflict by renaming the attribute.
+
 
     is_offline_available = Column(Boolean, nullable=False, default=False)
     last_verified_at = Column(DateTime(timezone=True), nullable=True)

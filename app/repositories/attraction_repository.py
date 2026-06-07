@@ -106,8 +106,9 @@ class AttractionRepository:
             return None
 
         for key, value in data.items():
-            if value is not None and hasattr(attraction, key):
-                setattr(attraction, key, value)
+            attr_key = "metadata_" if key == "metadata" else key
+            if value is not None and hasattr(attraction, attr_key):
+                setattr(attraction, attr_key, value)
 
         await self.db.flush()
         return attraction
