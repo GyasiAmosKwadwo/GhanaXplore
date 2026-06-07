@@ -1,15 +1,35 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_user, get_db, get_redis
 from app.models.user import User
-from app.schemas.auth import LoginRequest, LoginResponse
+from app.schemas.auth import LoginRequest, LoginResponse, SignupRequest, SignupResponse
 from app.services.auth_service import AuthService
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 bearer_scheme = HTTPBearer()
+
+
+@router.post("/register", response_model=SignupResponse, status_code=status.HTTP_201_CREATED)
+async def signup(
+    payload: SignupRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Public signup for tourists and operators.
+    """
+    auth_service = AuthService(db, None)
+    _, response = await auth_service.register_user(
+        email=payload.email,
+        password=payload.password,
+        first_name=payload.first_name,
+        last_name=payload.last_name,
+        phone_number=payload.phone_number,
+        account_type=payload.account_type,
+    )
+    return response
 
 
 @router.post("/login", response_model=LoginResponse)

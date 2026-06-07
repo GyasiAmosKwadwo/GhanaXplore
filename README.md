@@ -1,482 +1,460 @@
 # GhanaXplore
 
-A reusable, production-ready FastAPI backend for GhanaXplore with layered architecture, auth/RBAC foundations, async workers, and infrastructure defaults.
+Backend API for **GhanaXplore** — a digital tourism platform for discovering, booking, and managing Ghana's attractions. Built with FastAPI, PostgreSQL, and Redis.
 
-## Project Setup Guide
+> Domestic tourism first: attraction discovery, time-slot bookings, operator dashboards, and MoMo-ready payment hooks.
 
-If you want to adapt this architecture for future projects, follow:
+---
 
-- `TEMPLATE_README.md` for the bootstrap and migration workflow
-- `.env.example` for environment variable setup
+## Quick start
 
-## Domain-Specific Notes
-
-Some modules in this bootstrap are domain examples. Keep what you need and replace/remove the rest for the GhanaXplore product domain.
-
-## 🚀 Features
-
-- **Multi-Role Authentication**: Tourist, Operator, Guide, Community Host, Attraction Manager, Government, Investor, and Administrator roles with RBAC
-- **Async Processing**: RabbitMQ + Celery for background tasks
-- **Real-time Caching**: Redis for session management and caching
-- **External Integrations**:
-  - Pluggable third-party adapters (included examples can be replaced)
-  - Identity/verification API integration pattern
-  - Geocoding/location API integration pattern
-- **Automated Report Generation**: PDF reports with executive summaries
-- **Comprehensive Logging**: ELK Stack integration
-- **CI/CD**: GitHub Actions for automated testing and deployment
-- **Production Ready**: Docker, Nginx, PostgreSQL
-
-## 📋 Prerequisites
-
-- Python 3.11+
-- Docker & Docker Compose
-- PostgreSQL 15+
-- Redis 7+
-- RabbitMQ 3+
-
-## 🛠️ Installation
-
-### 1. Clone the Repository
+Get the API running locally in under 5 minutes:
 
 ```bash
-git clone https://github.com/your-org/ghanaxplore.git
-cd ghanaxplore
+git clone <your-repo-url>
+cd tourism
+cp .env.example .env          # review and adjust if needed
+make dev-install              # Python deps + pre-commit
+make up                       # start Docker services
+make migrate                  # apply database migrations
+make seed                     # create default admin user
 ```
 
-### 2. Environment Setup
+| Service | URL |
+|---------|-----|
+| API | http://localhost:8000 |
+| Swagger UI | http://localhost:8000/docs |
+| ReDoc | http://localhost:8000/api/v1/redoc |
+| Health check | http://localhost:8000/health |
+
+**Default admin** (created by `make seed`):
+
+| Email | Password |
+|-------|----------|
+| `admin@example.com` | `Admin@123` |
+
+Run integration tests:
+
+```bash
+# Postgres must be running (make up)
+TEST_DATABASE_URL="postgresql+asyncpg://app_user:app_pass@localhost:5433/app_db" make test
+```
+
+---
+
+## What this project does
+
+GhanaXplore connects three groups:
+
+- **Tourists** — browse approved attractions, book visit slots, save favorites, leave reviews
+- **Operators** — list attractions, manage schedules/time slots, confirm bookings, issue QR entry tokens
+- **Administrators** — verify operators, approve listings, manage users and audit logs
+
+### Implemented today
+
+- JWT auth with Redis-backed sessions and RBAC (8 roles)
+- Tourist and operator profiles
+- Attraction CRUD with approval workflow and readiness scores
+- Schedules and time slots with **capacity-aware bookings**
+- Booking lifecycle: create → update → cancel → operator confirm (QR token)
+- Reviews, favorites, notifications, password reset
+- Alembic migrations, Docker Compose dev stack, Render deploy config
+
+### Coming next
+
+- Paystack / MoMo payment integration
+- Tour packages, guide marketplace, events calendar
+- Offline attraction bundles
+- Next.js PWA frontend
+
+---
+
+## Tech stack
+
+| Layer | Choice |
+|-------|--------|
+| API | FastAPI 0.104, Python 3.11 |
+| Database | PostgreSQL 15 (SQLAlchemy 2 async + Alembic) |
+| Cache / sessions | Redis 7 |
+| Background jobs | Celery + Redis (wired, tasks TBD) |
+| Auth | JWT, bcrypt, role-based permissions |
+| Dev tooling | pytest, black, isort, mypy, pre-commit |
+
+---
+
+## Project structure
+
+```
+app/
+├── api/v1/endpoints/   # HTTP route handlers (thin — delegate to services)
+├── core/               # config, database, security, deps, permissions
+├── models/             # SQLAlchemy domain models
+├── schemas/            # Pydantic request/response schemas
+├── services/           # Business logic (auth, bookings, attractions, …)
+├── repositories/       # Data access layer
+├── tasks/              # Celery app config
+└── main.py             # FastAPI entry point
+
+alembic/                # Database migrations
+docker/                 # Dockerfiles, nginx, logstash
+scripts/                # init_db, seed_data, seed_permissions
+tests/
+├── conftest.py         # Fixtures (in-memory Redis, test DB)
+└── integration/        # API integration tests
+```
+
+---
+
+## Prerequisites
+
+- **Python 3.11+**
+- **Docker & Docker Compose** (recommended for local dev)
+- **Make** (optional but convenient)
+
+For running tests outside Docker, you only need Postgres reachable at `localhost:5433` (mapped by Compose).
+
+---
+
+## Environment setup
+
+Copy the example env file and fill in secrets:
 
 ```bash
 cp .env.example .env
-# Edit .env with your configuration
 ```
 
-### 3. Install Dependencies
+Key variables:
+
+| Variable | Purpose |
+|----------|---------|
+| `DATABASE_URL` | PostgreSQL connection (`postgresql+asyncpg://…`) |
+| `REDIS_URL` | Session store and cache |
+| `SECRET_KEY` / `JWT_SECRET_KEY` | App and token signing |
+| `API_VERSION` | Route prefix segment (default `v1` → `/api/v1/…`) |
+| `PAYSTACK_*` | Payment gateway (optional until payments ship) |
+| `CLOUDINARY_*` | Image hosting (recommended for production) |
+| `CORS_ORIGINS` | Frontend origin(s), e.g. `http://localhost:3000` |
+
+> **Note:** If `API_VERSION` is set to something other than `v1` (e.g. `v1.0.0`), all routes move to `/api/v1.0.0/…`. Check `/docs` after startup.
+
+---
+
+## Make commands
 
 ```bash
-# For development
-make dev-install
-
-# For production
-make install
+make help            # list all commands
+make up              # start Docker stack
+make down            # stop services
+make logs            # tail all logs
+make logs-api        # API logs only
+make migrate         # alembic upgrade head
+make seed            # seed admin + permissions
+make test            # run pytest
+make coverage        # tests with coverage report
+make lint            # black, isort, flake8, mypy
+make format          # auto-format code
 ```
 
-### 4. Start Services with Docker
+Database helpers:
 
 ```bash
-# Start all services
-make up
-
-# Initialize database
-make init-db
-
-# Run migrations
-make migrate
-
-# Seed initial data
-make seed
+make migrate-create MSG="describe your change"   # new Alembic revision
+make migrate-rollback                          # downgrade one step
+make shell-db                                  # psql into Postgres
 ```
 
+---
 
-## 🔐 Security Features
+## API overview
 
-### Authentication & Authorization
+All routes are prefixed with `/api/{API_VERSION}` (default `/api/v1`).
 
-- JWT-based authentication with refresh tokens
-- Role-Based Access Control (RBAC)
-- Session management with Redis
-- Token blacklisting on logout
-- Account lockout after failed attempts
+### Auth & users
 
-### Password Requirements
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/auth/register` | Register tourist or operator |
+| `POST` | `/auth/login` | Login → JWT access token |
+| `POST` | `/auth/logout` | Invalidate session |
+| `POST` | `/password/forgot` | Request reset code |
+| `POST` | `/password/reset` | Reset password |
+| `GET` | `/users/me` | Current user profile |
 
-- Minimum 8 characters
-- At least one uppercase letter
-- At least one digit
-- Bcrypt hashing with 12 rounds
+### Tourism core
 
-## 📊 API Endpoints
-
-### Authentication
-
-```bash
-POST   /api/v1/auth/login          # Login
-POST   /api/v1/auth/logout         # Logout
-POST   /api/v1/auth/refresh        # Refresh token
-```
-
-### Applications
-
-```bash
-POST   /api/v1/applications        # Create application
-GET    /api/v1/applications        # List applications
-GET    /api/v1/applications/:id    # Get application details
-PATCH  /api/v1/applications/:id    # Update application
-POST   /api/v1/applications/:id/submit  # Submit for processing
-POST   /api/v1/applications/:id/documents # Upload documents
-```
-
-### Reports
-
-```bash
-GET    /api/v1/reports/:id         # Get report
-GET    /api/v1/reports/:id/pdf     # Download PDF
-POST   /api/v1/reports/:id/generate # Generate report
-```
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/attractions` | Public listing (approved only) |
+| `POST` | `/attractions` | Create listing (operator) |
+| `PATCH` | `/attractions/{id}/approval` | Approve/reject (admin) |
+| `GET` | `/schedules` | Attraction schedules |
+| `GET` | `/time-slots` | Bookable time slots |
+| `POST` | `/bookings` | Create booking |
+| `GET` | `/bookings` | Tourist's bookings |
+| `GET` | `/bookings/managed` | Operator's bookings |
+| `PATCH` | `/bookings/{id}/confirm` | Confirm + issue QR token |
+| `PATCH` | `/bookings/{id}/cancel` | Cancel booking |
+| `POST` | `/reviews` | Submit review |
+| `POST` | `/favorites` | Save attraction |
 
 ### Admin
 
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/admin/users` | List users |
+| `PATCH` | `/admin/operators/{id}/verification` | Verify operator |
+| `GET` | `/admin/audit-logs` | Audit trail |
+
+Interactive docs: **http://localhost:8000/docs**
+
+### Example: create a booking
+
 ```bash
-POST   /api/v1/admin/users         # Create user
-GET    /api/v1/admin/users         # List users
-PATCH  /api/v1/admin/users/:id     # Update user
-DELETE /api/v1/admin/users/:id     # Delete user
-POST   /api/v1/admin/operators     # Onboard tourism operators
-GET    /api/v1/admin/audit-logs    # View audit logs
+# 1. Login
+TOKEN=$(curl -s -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"tourist@example.com","password":"Test123!"}' \
+  | jq -r '.access_token')
+
+# 2. Book an attraction slot
+curl -X POST http://localhost:8000/api/v1/bookings/ \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "attraction_id": "<uuid>",
+    "time_slot_id": "<uuid>",
+    "visit_date": "2026-07-01",
+    "party_size": 2,
+    "total_amount_ghs": "100.00"
+  }'
 ```
 
-## 🧪 Testing
+---
 
-### Run All Tests
+## User roles
+
+| Role | Purpose |
+|------|---------|
+| `tourist` | Browse and book attractions |
+| `operator` | Manage listings and bookings |
+| `guide` | Tour guide marketplace (model ready, API TBD) |
+| `community_host` | Community tourism experiences (TBD) |
+| `attraction_manager` | Site-level management |
+| `government` | Analytics dashboard (TBD) |
+| `investor` | Investment listings (TBD) |
+| `administrator` | Platform operations |
+
+Permissions are seeded via `scripts/seed_permissions.py` and enforced with `require_permission()` on protected routes.
+
+---
+
+## Database migrations
+
+Always use Alembic — do not rely on `DB_AUTO_CREATE_TABLES` in production.
 
 ```bash
+# Create a migration after model changes
+make migrate-create MSG="add feature x"
+
+# Apply
+make migrate
+
+# Check current version
+docker compose exec api alembic current
+```
+
+Migration chain:
+
+```
+ghx_core_0001 → ghx_no2fa_01 → ghx_profiles_01 → ghx_booking_slot_01
+```
+
+---
+
+## Testing
+
+```bash
+# All tests
 make test
-```
-
-### Run with Coverage
-
-```bash
-make coverage
-```
-
-### Run Specific Test Categories
-
-```bash
-# Unit tests only
-pytest tests/unit -v
 
 # Integration tests only
 pytest tests/integration -v
 
-# Specific test file
-pytest tests/unit/test_services/test_auth_service.py -v
+# With coverage
+make coverage
 ```
 
-### Test Database
+Tests use:
 
-Tests use a separate test database configured in `conftest.py`:
-
-- Database: `test_db`
-- Redis DB: `1` (separate from production)
-
-## 🔄 Celery Tasks
-
-### Background Check Tasks
-
-```python
-# Start Celery worker
-make celery-worker
-
-# Start Celery beat (scheduler)
-make celery-beat
-
-# Monitor with Flower
-make flower
-# Access: http://localhost:5555
-```
-
-### Task Types
-
-1. **check_ghana_card** - Verify Ghana Card with NIA
-2. **check_credit_history** - Credit check via XDS Data
-3. **geocode_addresses** - Geocode addresses using Google Maps
-4. **verify_employment** - Verify employment history
-5. **verify_education** - Verify education credentials
-6. **generate_report** - Generate final PDF report
-
-## 📝 Database Migrations
-
-### Create Migration
+- **Postgres** at `localhost:5433` (Docker Compose port mapping)
+- **In-memory FakeRedis** — no external Redis required for tests
+- Override `TEST_DATABASE_URL` for CI or custom setups
 
 ```bash
-alembic revision --autogenerate -m "Add new table"
+TEST_DATABASE_URL="postgresql+asyncpg://app_user:app_pass@localhost:5433/app_db" \
+  pytest tests/integration/test_bookings.py -v
 ```
 
-### Apply Migrations
+---
+
+## Local development (without full Docker stack)
+
+If you prefer running the API directly:
 
 ```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements-dev.txt
+
+# Start only Postgres + Redis
+docker compose up -d postgres redis
+
+# Point .env at localhost (Postgres is on host port 5433)
+# DATABASE_URL=postgresql+asyncpg://app_user:app_pass@localhost:5433/app_db
+# REDIS_URL=redis://:redis_pass@localhost:6379/0
+
 alembic upgrade head
+uvicorn app.main:app --reload --port 8000
 ```
 
-### Rollback Migration
+---
+
+## Docker services (local)
+
+`docker compose up` starts:
+
+| Service | Port | Needed for MVP? |
+|---------|------|-----------------|
+| `api` | 8000 | Yes |
+| `postgres` | 5433 | Yes |
+| `redis` | 6379 | Yes |
+| `celery_worker` | — | Later |
+| `rabbitmq` | 5672, 15672 | Optional (Redis can broker Celery) |
+| `elasticsearch`, `logstash`, `kibana` | 5601, 9200 | Dev/ops only — skip in production |
+| `flower` | 5555 | Celery monitoring — optional |
+| `nginx` | 80 | Optional locally |
+
+For production, you only need **API + Postgres + Redis**. See `render.yaml` for a lean deploy profile.
+
+---
+
+## Deployment
+
+### Render (recommended for MVP)
+
+The repo includes `render.yaml` with:
+
+- Web service (FastAPI)
+- Worker (Celery)
+- Managed Postgres
+- Redis (Key-Value)
+
+Connect your repo in the [Render dashboard](https://render.com) and deploy from the blueprint.
+
+### Docker production
 
 ```bash
-alembic downgrade -1
+docker compose -f docker-compose.prod.yml build
+docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml exec api alembic upgrade head
 ```
 
-## 🚢 Deployment
+### Production checklist
 
-### Development
+- [ ] Set strong `SECRET_KEY` and `JWT_SECRET_KEY`
+- [ ] `DEBUG=false`, `APP_ENV=production`
+- [ ] Configure `CORS_ORIGINS` to your frontend domain
+- [ ] Use managed Postgres and Redis (not containers on same host)
+- [ ] Store images on Cloudinary (local disk is ephemeral on PaaS)
+- [ ] Register Paystack webhook URL for payment callbacks
+- [ ] Enable HTTPS (provided by Render/Heroku/nginx)
+
+---
+
+## Security
+
+- JWT access tokens with Redis session validation
+- Token blacklisting on logout
+- Account lockout after repeated failed logins
+- Bcrypt password hashing (12 rounds)
+- RBAC with granular permissions per module
+- Pydantic input validation on all endpoints
+- CORS and trusted-host middleware
+
+Password rules: minimum 8 characters, at least one uppercase letter and one digit.
+
+---
+
+## Troubleshooting
+
+**API returns 401 immediately after login**
+
+Sessions are stored in Redis. Ensure Redis is running and `REDIS_URL` is correct.
+
+**`Invalid host header` in tests or requests**
+
+Add your host to `ALLOWED_HOSTS` or use `localhost` as the request host.
+
+**Migration fails locally**
 
 ```bash
-docker-compose up
+# Postgres not reachable — use Docker host port
+DATABASE_URL=postgresql+asyncpg://app_user:app_pass@localhost:5433/app_db alembic upgrade head
 ```
 
-### Production
+**Tests can't connect to database**
 
 ```bash
-# Build production images
-docker-compose -f docker-compose.prod.yml build
-
-# Start production services
-docker-compose -f docker-compose.prod.yml up -d
-
-# View logs
-docker-compose -f docker-compose.prod.yml logs -f
+docker compose ps postgres          # must be healthy
+TEST_DATABASE_URL="postgresql+asyncpg://app_user:app_pass@localhost:5433/app_db" pytest -v
 ```
 
-### Environment Variables
+**Routes 404 but `/health` works**
 
-Critical production environment variables:
+Check `API_VERSION` in `.env`. Routes live at `/api/{API_VERSION}/…`, not always `/api/v1/…`.
 
-```env
-APP_ENV=production
-DEBUG=False
-SECRET_KEY=<strong-random-key>
-JWT_SECRET_KEY=<strong-random-key>
-DATABASE_URL=postgresql+asyncpg://user:pass@host/db
-REDIS_URL=redis://:password@host:6379/0
-```
+---
 
-### Health Checks
+## Contributing
 
 ```bash
-# API Health
-curl http://localhost:8000/health
-
-# Database Health
-docker-compose exec postgres pg_isready
-
-# Redis Health
-docker-compose exec redis redis-cli ping
+git checkout -b feature/your-feature
+make format && make lint && make test
+git commit -m "Describe why, not just what"
 ```
 
-## 📊 Monitoring
+Pre-commit hooks run automatically after `make dev-install`.
 
-### Prometheus Metrics
+---
 
-Metrics exposed at `/metrics`:
+## Roadmap
 
-- Request count
-- Request duration
-- Active sessions
-- Task queue length
+**Phase 1 — Core platform** *(in progress)*
 
-### Kibana Dashboard
+- [x] Auth, RBAC, profiles
+- [x] Attractions, schedules, time slots
+- [x] Capacity-aware bookings + QR confirmation
+- [ ] Paystack / MoMo payments
+- [ ] Email and SMS notifications
 
-Access Kibana at `http://localhost:5601` to view:
+**Phase 2 — MVP launch**
 
-- Application logs
-- Error tracking
-- Performance metrics
-- User activity
+- [ ] Next.js PWA frontend
+- [ ] Tour packages API
+- [ ] Operator analytics dashboard
+- [ ] Offline attraction bundles
 
-### Flower (Celery Monitoring)
+**Phase 3 — Scale**
 
-Access Flower at `http://localhost:5555` to:
+- [ ] Guide marketplace
+- [ ] Community tourism module
+- [ ] Events and cultural calendar
+- [ ] Government analytics dashboard
+- [ ] ReloM8 accommodation integration
 
-- Monitor task execution
-- View task history
-- Inspect workers
-- Manage task queues
+---
 
-## 🔒 Security Best Practices
+## License & contact
 
-1. **Environment Variables**: Never commit `.env` files
-2. **Secrets Management**: Use secret management services in production
-3. **HTTPS**: Always use HTTPS in production
-4. **Rate Limiting**: Configured per endpoint
-5. **Input Validation**: Pydantic schemas validate all inputs
-6. **SQL Injection**: SQLAlchemy ORM prevents SQL injection
-7. **XSS Protection**: FastAPI auto-escapes outputs
-8. **CORS**: Configure allowed origins properly
+University of Ghana — BSc. Information Technology project by **Gyasi Amos Kwadwo**.
 
-## 📚 API Documentation
-
-### Swagger UI
-
-Access interactive API docs at:
-
-```
-http://localhost:8000/api/v1/docs
-```
-
-### ReDoc
-
-Alternative API documentation:
-
-```
-http://localhost:8000/api/v1/redoc
-```
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open Pull Request
-
-### Code Quality
-
-Before submitting PR:
-
-```bash
-# Format code
-make format
-
-# Run linters
-make lint
-
-# Run tests
-make test
-```
-
-
-
-## 🆘 Support
-
-For issues and questions:
-
-- **Issues**: GitHub Issues
-<!-- - **Email**: support@ghanaxplore.com
-- **Documentation**: [docs.ghanaxplore.com](https://docs.ghanaxplore.com) -->
-
-## 🎯 Roadmap
-
-### Phase 1 (Current)
-
-- ✅ Core authentication system
-- ✅ Application management
-- ✅ Background checks integration
-- ✅ Report generation
-
-### Phase 2
-
-- [ ] Mobile application (React Native)
-- [ ] Real-time notifications (WebSockets)
-- [ ] Advanced analytics dashboard
-- [ ] Bulk processing
-
-### Phase 3
-
-- [ ] AI-powered risk assessment
-- [ ] Blockchain verification
-- [ ] Multi-tenant architecture
-- [ ] International expansion
-
-## 📞 Default Credentials (Development)
-
-
-
-## 🏁 Quick Start Guide
-
-### For Developers
-
-```bash
-# 1. Clone and setup
-git clone https://github.com/your-org/ghanaxplore.git
-cd ghanaxplore
-cp .env.example .env
-
-# 2. Start services
-make up
-
-# 3. Initialize database
-make init-db
-make migrate
-make seed
-
-# 4. Run tests
-make test
-
-# 5. Access application
-# API: http://localhost:8000
-# Docs: http://localhost:8000/api/v1/docs
-# Flower: http://localhost:5555
-# Kibana: http://localhost:5601
-```
-
-### For Production Deployment
-
-```bash
-# 1. Configure production environment
-cp .env.example .env.production
-# Edit .env.production with production values
-
-# 2. Build and deploy
-docker-compose -f docker-compose.prod.yml build
-docker-compose -f docker-compose.prod.yml up -d
-
-# 3. Initialize production database
-docker-compose -f docker-compose.prod.yml exec api alembic upgrade head
-docker-compose -f docker-compose.prod.yml exec api python scripts/seed_data.py
-
-# 4. Verify deployment
-curl https://your-domain.com/health
-```
-
-## 🔧 Troubleshooting
-
-### Database Connection Issues
-
-```bash
-# Check PostgreSQL is running
-docker-compose ps postgres
-
-# View PostgreSQL logs
-docker-compose logs postgres
-
-# Connect to database
-docker-compose exec postgres psql -U app_user -d app_db
-```
-
-### Redis Connection Issues
-
-```bash
-# Check Redis is running
-docker-compose ps redis
-
-# Test Redis connection
-docker-compose exec redis redis-cli ping
-
-# View Redis keys
-docker-compose exec redis redis-cli keys "*"
-```
-
-### Celery Worker Issues
-
-```bash
-# Check worker status
-docker-compose ps celery_worker
-
-# View worker logs
-docker-compose logs celery_worker
-
-# Restart workers
-docker-compose restart celery_worker celery_beat
-```
-
-### Migration Issues
-
-```bash
-# Check current migration version
-alembic current
-
-# View migration history
-alembic history
-
-# Rollback and reapply
-alembic downgrade -1
-alembic upgrade head
-```
+Questions: open a GitHub issue or email `gyasiamoskwadwo@gmail.com`.

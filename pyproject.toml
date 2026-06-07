@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "backend-template"
+name = "ghanaxplore"
 version = "0.1.0"
-description = "Reusable FastAPI backend template"
-authors = ["Your Name <you@example.com>"]
+description = "GhanaXplore tourism platform backend API"
+authors = ["Gyasi Amos Kwadwo <gyasiamoskwadwo@gmail.com>"]
 readme = "README.md"
 
 [tool.black]

@@ -108,8 +108,11 @@ async def health_check():
     return {"status": "healthy", "app_name": settings.APP_NAME, "version": settings.API_VERSION}
 
 
-# Include API Router
+# Include versioned API router
 app.include_router(api_router, prefix=f"/api/{settings.API_VERSION}")
+
+
+
 
 
 if __name__ == "__main__":

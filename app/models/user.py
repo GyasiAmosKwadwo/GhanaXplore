@@ -1,7 +1,8 @@
 import enum
 import uuid
 
-from sqlalchemy import Boolean, Column, DateTime, Enum, Integer, String
+from sqlalchemy import Boolean, Column, DateTime, Integer, String
+from sqlalchemy.types import TypeDecorator
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -35,7 +36,23 @@ class User(Base):
     last_name = Column(String(100), nullable=False)
     phone_number = Column(String(20))
 
-    role = Column(Enum(UserRole), nullable=False, default=UserRole.TOURIST)
+    from sqlalchemy import Enum
+
+    # Use native Postgres enum type for the `role` column so values are bound
+    # as the DB enum type (avoids varchar -> enum mismatch on INSERT).
+    role = Column(
+        Enum(
+            UserRole,
+            # Map DB enum labels to enum member NAMES (the DB stores uppercase
+            # names like 'ADMINISTRATOR'). This lets SQLAlchemy load those
+            # labels into the `UserRole` enum correctly.
+            values_callable=lambda enum: [member.name for member in enum],
+            native_enum=True,
+            name="userrole",
+        ),
+        nullable=False,
+        default=UserRole.TOURIST,
+    )
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
 
@@ -54,3 +71,9 @@ class User(Base):
         cascade="all, delete-orphan",
     )
     roles = relationship("Role", secondary=user_roles, back_populates="users")
+    operator_profile = relationship(
+        "OperatorProfile", back_populates="user", uselist=False, cascade="all, delete-orphan"
+    )
+    tourist_profile = relationship(
+        "TouristProfile", back_populates="user", uselist=False, cascade="all, delete-orphan"
+    )
