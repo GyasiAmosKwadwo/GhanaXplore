@@ -13,6 +13,12 @@ class ApprovalStatus(str, enum.Enum):
     SUSPENDED = "suspended"
 
 
+class AttractionStatus(str, enum.Enum):
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    PENDING_APPROVAL = "pending_approval"
+
+
 class BookingStatus(str, enum.Enum):
     PENDING = "pending"
     CONFIRMED = "confirmed"

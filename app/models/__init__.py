@@ -5,6 +5,7 @@ import app.models.role
 import app.models.tourism_common
 import app.models.attraction
 import app.models.booking
+import app.models.favorite
 import app.models.community_experience
 import app.models.event
 import app.models.guide_profile
@@ -12,6 +13,8 @@ import app.models.operator_profile
 import app.models.offline_bundle
 import app.models.payment
 import app.models.review
+import app.models.schedule
+import app.models.time_slot
 import app.models.tourist_profile
 import app.models.tour_package
 import app.models.user

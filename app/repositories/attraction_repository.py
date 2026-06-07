@@ -33,6 +33,11 @@ class AttractionRepository:
             if filters.get("approval_status") is not None:
                 status_value = getattr(filters["approval_status"], "value", filters["approval_status"])
                 query = query.where(Attraction.approval_status == status_value)
+            if filters.get("status") is not None:
+                status_value = getattr(filters["status"], "value", filters["status"])
+                query = query.where(Attraction.status == status_value)
+            if filters.get("is_available") is not None:
+                query = query.where(Attraction.is_available == filters["is_available"])
             if filters.get("region") is not None:
                 query = query.where(Attraction.region.ilike(f"%{filters['region']}%"))
             if filters.get("category") is not None:
@@ -42,8 +47,11 @@ class AttractionRepository:
                 query = query.where(
                     or_(
                         Attraction.name.ilike(search),
+                        Attraction.slug.ilike(search),
                         Attraction.description.ilike(search),
+                        Attraction.short_description.ilike(search),
                         Attraction.region.ilike(search),
+                        Attraction.location.ilike(search),
                         Attraction.district.ilike(search),
                     )
                 )
@@ -66,6 +74,11 @@ class AttractionRepository:
             if filters.get("approval_status") is not None:
                 status_value = getattr(filters["approval_status"], "value", filters["approval_status"])
                 query = query.where(Attraction.approval_status == status_value)
+            if filters.get("status") is not None:
+                status_value = getattr(filters["status"], "value", filters["status"])
+                query = query.where(Attraction.status == status_value)
+            if filters.get("is_available") is not None:
+                query = query.where(Attraction.is_available == filters["is_available"])
             if filters.get("region") is not None:
                 query = query.where(Attraction.region.ilike(f"%{filters['region']}%"))
             if filters.get("category") is not None:
@@ -75,8 +88,11 @@ class AttractionRepository:
                 query = query.where(
                     or_(
                         Attraction.name.ilike(search),
+                        Attraction.slug.ilike(search),
                         Attraction.description.ilike(search),
+                        Attraction.short_description.ilike(search),
                         Attraction.region.ilike(search),
+                        Attraction.location.ilike(search),
                         Attraction.district.ilike(search),
                     )
                 )

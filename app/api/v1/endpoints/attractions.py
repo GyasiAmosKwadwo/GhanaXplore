@@ -37,7 +37,9 @@ async def list_attractions(
     region: Optional[str] = Query(None, description="Filter by region"),
     category: Optional[str] = Query(None, description="Filter by category"),
     operator_id: Optional[UUID] = Query(None, description="Filter by operator ID"),
-    search: Optional[str] = Query(None, description="Search by name, description, region, or district"),
+    status: Optional[str] = Query(None, description="Filter by attraction status"),
+    is_available: Optional[bool] = Query(None, description="Filter by availability"),
+    search: Optional[str] = Query(None, description="Search by name, description, region, location, or district"),
     sort_by: str = Query("created_at", description="Sort by field"),
     sort_order: str = Query("desc", regex="^(asc|desc)$", description="Sort order"),
     page: int = Query(1, ge=1),
@@ -51,6 +53,10 @@ async def list_attractions(
         filters["region"] = region
     if category:
         filters["category"] = category
+    if status:
+        filters["status"] = status
+    if is_available is not None:
+        filters["is_available"] = is_available
     if operator_id:
         filters["operator_id"] = operator_id
     if search:
@@ -79,7 +85,9 @@ async def list_operator_attractions_by_id(
     current_user: User = Depends(get_current_user),
     category: Optional[str] = Query(None, description="Filter by category"),
     region: Optional[str] = Query(None, description="Filter by region"),
-    search: Optional[str] = Query(None, description="Search by name, description, region, or district"),
+    status: Optional[str] = Query(None, description="Filter by attraction status"),
+    is_available: Optional[bool] = Query(None, description="Filter by availability"),
+    search: Optional[str] = Query(None, description="Search by name, description, region, location, or district"),
     sort_by: str = Query("created_at", description="Sort by field"),
     sort_order: str = Query("desc", regex="^(asc|desc)$", description="Sort order"),
     page: int = Query(1, ge=1),
@@ -93,6 +101,10 @@ async def list_operator_attractions_by_id(
         filters["region"] = region
     if category:
         filters["category"] = category
+    if status:
+        filters["status"] = status
+    if is_available is not None:
+        filters["is_available"] = is_available
     if search:
         filters["search"] = search
 
@@ -118,7 +130,9 @@ async def list_my_attractions(
     current_user: User = Depends(get_current_user),
     category: Optional[str] = Query(None, description="Filter by category"),
     region: Optional[str] = Query(None, description="Filter by region"),
-    search: Optional[str] = Query(None, description="Search by name, description, region, or district"),
+    status: Optional[str] = Query(None, description="Filter by attraction status"),
+    is_available: Optional[bool] = Query(None, description="Filter by availability"),
+    search: Optional[str] = Query(None, description="Search by name, description, region, location, or district"),
     sort_by: str = Query("created_at", description="Sort by field"),
     sort_order: str = Query("desc", regex="^(asc|desc)$", description="Sort order"),
     page: int = Query(1, ge=1),
@@ -132,6 +146,10 @@ async def list_my_attractions(
         filters["region"] = region
     if category:
         filters["category"] = category
+    if status:
+        filters["status"] = status
+    if is_available is not None:
+        filters["is_available"] = is_available
     if search:
         filters["search"] = search
 

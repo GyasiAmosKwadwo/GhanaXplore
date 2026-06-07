@@ -22,8 +22,11 @@ class AttractionService:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Operator account must be verified before creating attractions")
 
         attraction = Attraction(
+            slug=data.slug,
             name=data.name,
+            short_description=data.short_description,
             region=data.region,
+            location=data.location,
             district=data.district,
             description=data.description,
             category=data.category,
@@ -31,6 +34,14 @@ class AttractionService:
             gps_longitude=data.gps_longitude,
             opening_hours=data.opening_hours,
             entry_fee_ghs=data.entry_fee_ghs,
+            is_available=data.is_available if data.is_available is not None else True,
+            images=data.images,
+            amenities=data.amenities,
+            includes=data.includes,
+            excludes=data.excludes,
+            cancellation_policy=data.cancellation_policy,
+            special_requirements=data.special_requirements,
+            metadata=data.metadata,
             is_offline_available=data.is_offline_available or False,
             operator_id=user.id,
         )
@@ -53,6 +64,7 @@ class AttractionService:
     ):
         filters = filters or {}
         filters.setdefault("approval_status", ApprovalStatus.APPROVED)
+        filters.setdefault("status", "active")
 
         attractions = await self.repo.list(
             skip=skip,
