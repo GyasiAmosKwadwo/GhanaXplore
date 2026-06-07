@@ -23,7 +23,6 @@ async def get_my_tourist_profile(
     return await service.get_or_create_tourist_profile(current_user)
 
 
-@router.post("/me/tourist", response_model=TouristProfileResponse)
 @router.put("/me/tourist", response_model=TouristProfileResponse)
 async def save_my_tourist_profile(
     data: TouristProfileUpdate,
@@ -43,7 +42,6 @@ async def get_my_operator_profile(
     return await service.get_or_create_operator_profile(current_user)
 
 
-@router.post("/me/operator", response_model=OperatorProfileResponse)
 @router.put("/me/operator", response_model=OperatorProfileResponse)
 async def save_my_operator_profile(
     data: OperatorProfileUpdate,

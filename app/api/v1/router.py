@@ -8,6 +8,7 @@ from app.api.v1.endpoints import (
     profiles,
     roles,
     users,
+    attractions,
 )
 
 api_router = APIRouter()
@@ -25,6 +26,9 @@ api_router.include_router(notifications.router)
 
 # Profiles
 api_router.include_router(profiles.router)
+
+# Attractions
+api_router.include_router(attractions.router)
 
 # Admin
 api_router.include_router(admin.router)

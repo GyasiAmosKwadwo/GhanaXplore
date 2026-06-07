@@ -181,6 +181,7 @@ class AuthService:
             access_token=access_token,
             refresh_token=refresh_token,
             is_first_time=is_first_time,
+            user_id=str(user.id),
         )
 
     async def logout(self, token: str, user_id) -> None:

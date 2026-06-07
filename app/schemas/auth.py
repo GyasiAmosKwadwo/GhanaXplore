@@ -20,6 +20,8 @@ class LoginResponse(BaseModel):
     refresh_token: str
     token_type: str = "bearer"
     is_first_time: bool = False
+    user_id: str
+
 
 
 class RefreshTokenRequest(BaseModel):

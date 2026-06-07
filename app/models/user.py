@@ -36,45 +36,23 @@ class User(Base):
     last_name = Column(String(100), nullable=False)
     phone_number = Column(String(20))
 
-    class FlexibleEnum(TypeDecorator):
-        impl = String
+    from sqlalchemy import Enum
 
-        def __init__(self, enum_cls, *args, **kwargs):
-            self.enum_cls = enum_cls
-            super().__init__(*args, **kwargs)
-
-        def process_bind_param(self, value, dialect):
-            if value is None:
-                return None
-            if isinstance(value, self.enum_cls):
-                return value.value
-            if isinstance(value, str):
-                # accept either the enum value or the enum name
-                try:
-                    return self.enum_cls(value).value
-                except ValueError:
-                    try:
-                        return self.enum_cls[value].value
-                    except Exception:
-                        return value
-
-        def process_result_value(self, value, dialect):
-            if value is None:
-                return None
-            # Map stored DB value (could be name or value) back to enum
-            try:
-                return self.enum_cls(value)
-            except ValueError:
-                try:
-                    return self.enum_cls[value]
-                except Exception:
-                    # fallback: try lowercase
-                    try:
-                        return self.enum_cls(value.lower())
-                    except Exception:
-                        return value
-
-    role = Column(FlexibleEnum(UserRole), nullable=False, default=UserRole.TOURIST)
+    # Use native Postgres enum type for the `role` column so values are bound
+    # as the DB enum type (avoids varchar -> enum mismatch on INSERT).
+    role = Column(
+        Enum(
+            UserRole,
+            # Map DB enum labels to enum member NAMES (the DB stores uppercase
+            # names like 'ADMINISTRATOR'). This lets SQLAlchemy load those
+            # labels into the `UserRole` enum correctly.
+            values_callable=lambda enum: [member.name for member in enum],
+            native_enum=True,
+            name="userrole",
+        ),
+        nullable=False,
+        default=UserRole.TOURIST,
+    )
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
 
