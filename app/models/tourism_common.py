@@ -9,8 +9,14 @@ from app.core.database import Base
 class ApprovalStatus(str, enum.Enum):
     PENDING = "pending"
     APPROVED = "approved"
-    REJECTED = "rejected"
+    DECLINED = "declined"
     SUSPENDED = "suspended"
+
+    @classmethod
+    def _missing_(cls, value):
+        if value == "rejected":
+            return cls.DECLINED
+        return super()._missing_(value)
 
 
 class AttractionStatus(str, enum.Enum):

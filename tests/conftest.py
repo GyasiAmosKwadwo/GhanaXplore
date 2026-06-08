@@ -16,6 +16,7 @@ from app.main import app
 
 API_PREFIX = f"/api/{settings.API_VERSION}"
 from app.models.attraction import Attraction
+from app.models.role import Permission, Role, user_roles
 from app.models.time_slot import TimeSlot
 from app.models.tourism_common import ApprovalStatus, AttractionStatus
 from app.models.user import User, UserRole
@@ -109,6 +110,73 @@ async def _auth_headers(user: User, redis_client: FakeRedis) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
 
 
+OPERATOR_PERMISSION_CODES = [
+    "attraction.create",
+    "attraction.view",
+    "attraction.update",
+    "attraction.delete",
+    "booking.view",
+    "booking.manage",
+]
+
+async def _get_or_create_permissions(
+    db_session: AsyncSession,
+    permission_codes: list[str],
+) -> list[Permission]:
+    from sqlalchemy import select
+
+    result = await db_session.execute(
+        select(Permission).where(Permission.code.in_(permission_codes))
+    )
+    existing = {perm.code: perm for perm in result.scalars().all()}
+
+    permissions: list[Permission] = []
+    for code in permission_codes:
+        if code in existing:
+            permissions.append(existing[code])
+            continue
+        perm = Permission(name=code, code=code, module="test", is_active=True)
+        db_session.add(perm)
+        permissions.append(perm)
+
+    await db_session.flush()
+    return permissions
+
+
+async def _assign_role_with_permissions(
+    db_session: AsyncSession,
+    user: User,
+    role_code: str,
+    permission_codes: list[str],
+) -> None:
+    """Attach an RBAC role with the given permissions to a user."""
+    from sqlalchemy import select
+
+    permissions = await _get_or_create_permissions(db_session, permission_codes)
+
+    result = await db_session.execute(select(Role).where(Role.code == role_code))
+    role = result.scalar_one_or_none()
+    if role is None:
+        role = Role(
+            name=role_code.title(),
+            code=role_code,
+            description=f"Test {role_code} role",
+            is_active=True,
+        )
+        role.permissions = permissions
+        db_session.add(role)
+        await db_session.flush()
+    else:
+        role.permissions = permissions
+        await db_session.flush()
+
+    await db_session.execute(
+        user_roles.insert().values(user_id=user.id, role_id=role.id)
+    )
+    await db_session.commit()
+    await db_session.refresh(user)
+
+
 @pytest.fixture
 async def test_user(db_session: AsyncSession) -> User:
     security = SecurityService()
@@ -142,6 +210,9 @@ async def test_operator(db_session: AsyncSession) -> User:
     db_session.add(operator)
     await db_session.commit()
     await db_session.refresh(operator)
+    await _assign_role_with_permissions(
+        db_session, operator, "operator", OPERATOR_PERMISSION_CODES
+    )
     return operator
 
 

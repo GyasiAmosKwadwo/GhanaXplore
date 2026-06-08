@@ -266,6 +266,11 @@ class BookingService:
         booking = await self.repo.get_by_id(booking_id)
         if not booking:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
+        if not booking.attraction_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Booking has no associated attraction",
+            )
 
         attraction = await self._get_approved_attraction(booking.attraction_id)
         if operator.role == UserRole.OPERATOR and attraction.operator_id != operator.id:

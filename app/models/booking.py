@@ -41,7 +41,7 @@ class Booking(Base):
 
     tourist = relationship("User")
     attraction = relationship("Attraction")
-    time_slot = relationship("TimeSlot")
+    time_slot = relationship("TimeSlot", back_populates="bookings")
     tour_package = relationship("TourPackage", back_populates="bookings")
     guide = relationship("GuideProfile", back_populates="bookings")
     payment = relationship("Payment", back_populates="booking", uselist=False)

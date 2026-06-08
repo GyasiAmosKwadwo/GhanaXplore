@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_current_user, get_db
 from app.core.permissions import require_permission
-from app.models.tourism_common import ApprovalStatus
+from app.models.tourism_common import ApprovalStatus, AttractionStatus
 from app.models.user import User
 from app.schemas.attraction import (
     AttractionApprovalUpdate,
@@ -185,7 +185,12 @@ async def get_attraction(
     """Get a public attraction by ID."""
     service = AttractionService(db)
     attraction = await service.get_attraction(attraction_id)
-    if not attraction or attraction.approval_status != ApprovalStatus.APPROVED:
+    if (
+        not attraction
+        or attraction.approval_status != ApprovalStatus.APPROVED
+        or attraction.status != AttractionStatus.ACTIVE
+        or not attraction.is_available
+    ):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Attraction not found")
     return attraction
 
@@ -222,7 +227,7 @@ async def approve_attraction(
     current_user: User = Depends(require_permission("attraction.approve")),
     db: AsyncSession = Depends(get_db),
 ):
-    """Approve or reject an attraction. Requires review permission."""
+    """Approve or decline an attraction. Requires review permission."""
     service = AttractionService(db)
     attraction = await service.set_approval_status(attraction_id, payload.approval_status)
     return attraction

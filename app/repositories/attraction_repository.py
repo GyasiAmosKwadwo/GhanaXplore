@@ -1,5 +1,6 @@
 from sqlalchemy import select, or_, func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.models.attraction import Attraction
 
@@ -14,7 +15,9 @@ class AttractionRepository:
         return attraction
 
     async def get_by_id(self, attraction_id):
-        result = await self.db.execute(select(Attraction).where(Attraction.id == attraction_id))
+        result = await self.db.execute(
+            select(Attraction).options(selectinload(Attraction.activities)).where(Attraction.id == attraction_id)
+        )
         return result.scalar_one_or_none()
 
     async def list(
@@ -62,7 +65,7 @@ class AttractionRepository:
         else:
             query = query.order_by(sort_by_attr.desc())
 
-        result = await self.db.execute(query.offset(skip).limit(limit))
+        result = await self.db.execute(query.options(selectinload(Attraction.activities)).offset(skip).limit(limit))
         return result.scalars().all()
 
     async def count(self, filters: dict | None = None) -> int:

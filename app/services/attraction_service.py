@@ -1,7 +1,8 @@
 from fastapi import HTTPException, status
 
 from app.models.attraction import Attraction
-from app.models.tourism_common import ApprovalStatus
+from app.models.attraction_activity import AttractionActivity
+from app.models.tourism_common import ApprovalStatus, AttractionStatus
 from app.models.user import User, UserRole
 from app.repositories.attraction_repository import AttractionRepository
 from app.schemas.attraction import AttractionCreate
@@ -44,12 +45,32 @@ class AttractionService:
             metadata_=data.metadata,
             is_offline_available=data.is_offline_available or False,
             operator_id=user.id,
+            activities=[
+                AttractionActivity(
+                    name=activity.name,
+                    slug=activity.slug,
+                    description=activity.description,
+                    category=activity.category,
+                    price_ghs=activity.price_ghs,
+                    price_usd=activity.price_usd,
+                    duration_minutes=activity.duration_minutes,
+                    max_participants=activity.max_participants,
+                    includes=activity.includes,
+                    excludes=activity.excludes,
+                    restrictions=activity.restrictions,
+                    images=activity.images,
+                    metadata_=activity.metadata,
+                    is_available=activity.is_available if activity.is_available is not None else True,
+                    requires_advance_booking=activity.requires_advance_booking or False,
+                    display_order=activity.display_order,
+                )
+                for activity in data.activities
+            ],
         )
 
         await self.repo.create(attraction)
         await self.db.commit()
-        await self.db.refresh(attraction)
-        return attraction
+        return await self.repo.get_by_id(attraction.id)
 
     async def get_attraction(self, attraction_id) -> Attraction | None:
         return await self.repo.get_by_id(attraction_id)
@@ -64,7 +85,9 @@ class AttractionService:
     ):
         filters = filters or {}
         filters.setdefault("approval_status", ApprovalStatus.APPROVED)
-        filters.setdefault("status", "active")
+        filters.setdefault("status", AttractionStatus.ACTIVE)
+        if "is_available" not in filters:
+            filters["is_available"] = True
 
         attractions = await self.repo.list(
             skip=skip,
@@ -119,8 +142,7 @@ class AttractionService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Attraction not found")
 
         await self.db.commit()
-        await self.db.refresh(updated_attraction)
-        return updated_attraction
+        return await self.repo.get_by_id(attraction_id)
 
     async def set_approval_status(self, attraction_id, approval_status: ApprovalStatus) -> Attraction:
         attraction = await self.repo.get_by_id(attraction_id)
@@ -128,10 +150,16 @@ class AttractionService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Attraction not found")
 
         attraction.approval_status = approval_status
+        if approval_status == ApprovalStatus.APPROVED:
+            attraction.status = AttractionStatus.ACTIVE
+        elif approval_status in {ApprovalStatus.DECLINED, ApprovalStatus.SUSPENDED}:
+            attraction.status = AttractionStatus.INACTIVE
+        elif approval_status == ApprovalStatus.PENDING:
+            attraction.status = AttractionStatus.PENDING_APPROVAL
+
         await self.db.flush()
         await self.db.commit()
-        await self.db.refresh(attraction)
-        return attraction
+        return await self.repo.get_by_id(attraction_id)
 
     async def delete_attraction(self, user: User, attraction_id) -> None:
         attraction = await self.repo.get_by_id(attraction_id)

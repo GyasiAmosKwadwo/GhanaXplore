@@ -117,6 +117,7 @@ async def seed_roles(db: AsyncSession, permissions: list[Permission]) -> None:
                 "attraction.create",
                 "attraction.view",
                 "attraction.update",
+                "attraction.delete",
                 "package.create",
                 "package.view",
                 "package.update",

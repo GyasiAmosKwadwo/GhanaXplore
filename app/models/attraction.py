@@ -26,6 +26,7 @@ class Attraction(Base):
     opening_hours = Column(String(255), nullable=True)
     entry_fee_ghs = Column(Numeric(12, 2), nullable=True)
     is_available = Column(Boolean, nullable=False, default=True)
+
     readiness_score = Column(Integer, nullable=False, default=5)
     accessibility_rating = Column(Integer, nullable=True)
     approval_status = Column(
@@ -40,7 +41,6 @@ class Attraction(Base):
     special_requirements = Column(Text, nullable=True)
     metadata_ = Column("metadata", JSON, nullable=False, default=dict)
     # NOTE: removed reserved SQLAlchemy Declarative 'metadata' conflict by renaming the attribute.
-
 
     is_offline_available = Column(Boolean, nullable=False, default=False)
     last_verified_at = Column(DateTime(timezone=True), nullable=True)
@@ -60,3 +60,13 @@ class Attraction(Base):
     schedules = relationship("Schedule", back_populates="attraction")
     time_slots = relationship("TimeSlot", back_populates="attraction")
     reviews = relationship("Review", back_populates="attraction")
+    activities = relationship(
+        "AttractionActivity",
+        back_populates="attraction",
+        cascade="all, delete-orphan",
+        order_by="AttractionActivity.display_order",
+    )
+
+
+
+   

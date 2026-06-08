@@ -9,9 +9,43 @@ from app.models.tourism_common import ApprovalStatus, AttractionStatus
 from app.schemas.user import Pagination
 
 
-class AttractionBase(BaseModel):
-    slug: str = Field(..., max_length=255)
+class AttractionActivityBase(BaseModel):
     name: str = Field(..., max_length=255)
+    slug: str = Field(..., max_length=255)
+    description: Optional[str] = None
+    category: Optional[str] = Field(None, max_length=100)
+    price_ghs: Optional[Decimal] = None
+    price_usd: Optional[Decimal] = None
+    duration_minutes: Optional[int] = None
+    max_participants: Optional[int] = None
+    is_available: Optional[bool] = True
+    requires_advance_booking: Optional[bool] = False
+    display_order: Optional[int] = 0
+    includes: List[str] = Field(default_factory=list)
+    excludes: List[str] = Field(default_factory=list)
+    restrictions: Dict[str, Any] = Field(default_factory=dict)
+    images: List[str] = Field(default_factory=list)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class AttractionActivityCreate(AttractionActivityBase):
+    pass
+
+
+class AttractionResponseActivity(AttractionActivityBase):
+    id: UUID
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]
+    metadata: Dict[str, Any] = Field(default_factory=dict, alias="metadata_")
+
+    class Config:
+        from_attributes = True
+        populate_by_name = True
+
+
+class AttractionBase(BaseModel):
+    name: str = Field(..., max_length=255)
+    slug: str = Field(..., max_length=255)
     short_description: Optional[str] = Field(None, max_length=500)
     region: str = Field(..., max_length=120)
     location: Optional[str] = Field(None, max_length=255)
@@ -29,7 +63,10 @@ class AttractionBase(BaseModel):
     excludes: List[str] = Field(default_factory=list)
     cancellation_policy: Optional[str] = None
     special_requirements: Optional[str] = None
+    is_offline_available: Optional[bool] = None
     metadata: Dict[str, Any] = Field(default_factory=dict)
+    activities: List[AttractionActivityCreate] = Field(default_factory=list)
+
 
 
 class AttractionCreate(AttractionBase):
@@ -69,11 +106,14 @@ class AttractionResponse(AttractionBase):
     operator_id: Optional[UUID]
     approval_status: ApprovalStatus
     status: AttractionStatus
+    activities: List[AttractionResponseActivity] = Field(default_factory=list)
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
+    metadata: Dict[str, Any] = Field(default_factory=dict, alias="metadata_")
 
     class Config:
         from_attributes = True
+        populate_by_name = True
 
 
 class AttractionListResponse(BaseModel):

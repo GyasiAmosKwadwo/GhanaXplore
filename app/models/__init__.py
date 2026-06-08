@@ -4,6 +4,7 @@ import app.models.password_reset
 import app.models.role
 import app.models.tourism_common
 import app.models.attraction
+import app.models.attraction_activity
 import app.models.booking
 import app.models.favorite
 import app.models.community_experience
