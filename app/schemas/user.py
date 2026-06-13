@@ -52,6 +52,7 @@ class UserInDB(UserBase):
     id: uuid.UUID
     is_active: bool
     is_verified: bool
+    role:str
     last_login: Optional[datetime]
     created_at: datetime
     updated_at: datetime

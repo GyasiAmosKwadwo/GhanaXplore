@@ -9,7 +9,7 @@ from app.schemas.user import Pagination
 
 class ScheduleBase(BaseModel):
     attraction_id: UUID
-    day_of_week: int = Field(..., ge=0, le=6)
+    day_of_week: int = Field(..., ge=0, le=7)
     open_time: str = Field(..., max_length=10)
     close_time: str = Field(..., max_length=10)
     is_open: Optional[bool] = True

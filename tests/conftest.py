@@ -245,6 +245,11 @@ async def operator_auth_headers(test_operator: User, redis_client: FakeRedis) ->
 
 
 @pytest.fixture
+async def admin_auth_headers(test_admin: User, redis_client: FakeRedis) -> dict[str, str]:
+    return await _auth_headers(test_admin, redis_client)
+
+
+@pytest.fixture
 async def approved_attraction(db_session: AsyncSession, test_operator: User) -> Attraction:
     attraction = Attraction(
         slug="cape-coast-castle",

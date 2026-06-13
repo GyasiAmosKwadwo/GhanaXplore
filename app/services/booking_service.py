@@ -7,6 +7,7 @@ from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.audit_context import AuditContext
 from app.models.attraction import Attraction
 from app.models.booking import Booking
 from app.models.time_slot import TimeSlot
@@ -14,6 +15,7 @@ from app.models.tourism_common import ApprovalStatus, BookingStatus
 from app.models.user import User, UserRole
 from app.repositories.booking_repository import BookingRepository
 from app.schemas.booking import BookingCreate, BookingUpdate
+from app.services.audit_service import AuditAction, AuditService
 from sqlalchemy import select
 
 
@@ -21,6 +23,7 @@ class BookingService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.repo = BookingRepository(db)
+        self.audit = AuditService(db)
 
     @staticmethod
     def _generate_booking_reference() -> str:
@@ -84,7 +87,13 @@ class BookingService:
                 detail="Time slot capacity exceeded",
             )
 
-    async def create_booking(self, user: User, payload: BookingCreate) -> Booking:
+    async def create_booking(
+        self,
+        user: User,
+        payload: BookingCreate,
+        *,
+        audit_context: AuditContext | None = None,
+    ) -> Booking:
         attraction = await self._get_approved_attraction(payload.attraction_id)
         self._validate_visit_date(payload.visit_date)
 
@@ -131,6 +140,20 @@ class BookingService:
         )
 
         await self.repo.create(booking)
+        if audit_context:
+            await self.audit.log(
+                audit_context,
+                action=AuditAction.BOOKING_CREATED,
+                resource_type="booking",
+                resource_id=booking.id,
+                details={
+                    "booking_reference": booking.booking_reference,
+                    "attraction_id": str(payload.attraction_id),
+                    "visit_date": payload.visit_date.isoformat(),
+                    "party_size": party_size,
+                    "total_amount_ghs": str(total_amount),
+                },
+            )
         await self.db.refresh(booking)
         return booking
 
@@ -200,7 +223,12 @@ class BookingService:
         return items, total
 
     async def update_booking(
-        self, booking_id: UUID, tourist_id: UUID, payload: BookingUpdate
+        self,
+        booking_id: UUID,
+        tourist_id: UUID,
+        payload: BookingUpdate,
+        *,
+        audit_context: AuditContext | None = None,
     ) -> Booking:
         booking = await self.repo.get_for_tourist(booking_id, tourist_id)
         if not booking:
@@ -239,11 +267,30 @@ class BookingService:
         if payload.notes is not None:
             booking.notes = payload.notes
 
+        if audit_context:
+            await self.audit.log(
+                audit_context,
+                action=AuditAction.BOOKING_UPDATED,
+                resource_type="booking",
+                resource_id=booking.id,
+                details={
+                    "booking_reference": booking.booking_reference,
+                    "visit_date": next_visit_date.isoformat(),
+                    "party_size": next_party_size,
+                },
+            )
+
         await self.db.flush()
         await self.db.refresh(booking)
         return booking
 
-    async def cancel_booking(self, booking_id: UUID, tourist_id: UUID) -> Booking:
+    async def cancel_booking(
+        self,
+        booking_id: UUID,
+        tourist_id: UUID,
+        *,
+        audit_context: AuditContext | None = None,
+    ) -> Booking:
         booking = await self.repo.get_for_tourist(booking_id, tourist_id)
         if not booking:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
@@ -258,11 +305,28 @@ class BookingService:
             )
 
         booking.status = BookingStatus.CANCELLED
+        if audit_context:
+            await self.audit.log(
+                audit_context,
+                action=AuditAction.BOOKING_CANCELLED,
+                resource_type="booking",
+                resource_id=booking.id,
+                details={
+                    "booking_reference": booking.booking_reference,
+                    "attraction_id": str(booking.attraction_id) if booking.attraction_id else None,
+                },
+            )
         await self.db.flush()
         await self.db.refresh(booking)
         return booking
 
-    async def confirm_booking(self, booking_id: UUID, operator: User) -> Booking:
+    async def confirm_booking(
+        self,
+        booking_id: UUID,
+        operator: User,
+        *,
+        audit_context: AuditContext | None = None,
+    ) -> Booking:
         booking = await self.repo.get_by_id(booking_id)
         if not booking:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
@@ -292,6 +356,18 @@ class BookingService:
 
         booking.status = BookingStatus.CONFIRMED
         booking.qr_code_token = self._generate_qr_code_token()
+        if audit_context:
+            await self.audit.log(
+                audit_context,
+                action=AuditAction.BOOKING_CONFIRMED,
+                resource_type="booking",
+                resource_id=booking.id,
+                details={
+                    "booking_reference": booking.booking_reference,
+                    "attraction_id": str(booking.attraction_id) if booking.attraction_id else None,
+                    "operator_id": str(operator.id),
+                },
+            )
         await self.db.flush()
         await self.db.refresh(booking)
         return booking

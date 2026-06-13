@@ -9,6 +9,7 @@ from app.core.deps import get_db
 from app.core.permissions import require_permission
 from app.models.user import User, UserRole
 from app.repositories.user_repository import UserRepository
+from app.schemas.audit import AuditLogListResponse
 from app.schemas.user import (
     OperatorVerificationUpdate,
     UserResponse,
@@ -86,21 +87,42 @@ async def update_user_role(
     return user
 
 
-@router.get("/audit-logs")
+@router.get("/audit-logs", response_model=AuditLogListResponse)
 async def get_audit_logs(
-    skip: int = 0,
-    limit: int = 100,
+    page: int = Query(1, ge=1),
+    per_page: int = Query(50, ge=1, le=200),
+    user_id: Optional[uuid.UUID] = Query(None, description="Filter by acting user"),
+    action: Optional[str] = Query(None, description="Filter by action code (e.g. attraction.created)"),
+    resource_type: Optional[str] = Query(None, description="Filter by resource type (e.g. attraction, booking)"),
+    resource_id: Optional[uuid.UUID] = Query(None, description="Filter by resource ID"),
     current_user: User = Depends(require_permission("audit.view")),
     db: AsyncSession = Depends(get_db),
 ):
-    from sqlalchemy import select
+    """List platform audit logs for compliance, dispute resolution, and admin review."""
+    from app.services.audit_service import AuditService
 
-    from app.models.audit import AuditLog
-
-    result = await db.execute(
-        select(AuditLog).order_by(AuditLog.created_at.desc()).offset(skip).limit(limit)
+    skip = (page - 1) * per_page
+    service = AuditService(db)
+    items, total = await service.list_logs(
+        skip=skip,
+        limit=per_page,
+        user_id=user_id,
+        action=action,
+        resource_type=resource_type,
+        resource_id=resource_id,
     )
-    return result.scalars().all()
+    total_pages = (total + per_page - 1) // per_page if per_page else 0
+    return {
+        "items": items,
+        "pagination": {
+            "total": total,
+            "page": page,
+            "per_page": per_page,
+            "total_pages": total_pages,
+            "has_next": page < total_pages,
+            "has_prev": page > 1 and total_pages > 0,
+        },
+    }
 
 
 @router.get("/users", response_model=UsersListResponse)

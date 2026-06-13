@@ -20,6 +20,12 @@ class AttractionRepository:
         )
         return result.scalar_one_or_none()
 
+    async def get_by_slug(self, slug: str) -> Attraction | None:
+        result = await self.db.execute(
+            select(Attraction).options(selectinload(Attraction.activities)).where(Attraction.slug == slug)
+        )
+        return result.scalar_one_or_none()
+
     async def list(
         self,
         skip: int = 0,

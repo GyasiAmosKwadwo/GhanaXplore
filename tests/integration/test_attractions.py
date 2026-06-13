@@ -183,6 +183,88 @@ async def test_operator_deletes_own_attraction(
 
 
 @pytest.mark.asyncio
+async def test_create_attraction_duplicate_slug_returns_409(
+    client: AsyncClient,
+    operator_auth_headers: dict,
+    approved_attraction: Attraction,
+):
+    response = await client.post(
+        f"{API_PREFIX}/attractions/",
+        headers=operator_auth_headers,
+        json=_attraction_payload(slug=approved_attraction.slug, name="Duplicate Castle"),
+    )
+
+    assert response.status_code == 409
+    assert "slug" in response.json()["detail"].lower()
+    assert approved_attraction.slug in response.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_update_attraction_duplicate_slug_returns_409(
+    client: AsyncClient,
+    operator_auth_headers: dict,
+    db_session: AsyncSession,
+    test_operator: User,
+):
+    first = Attraction(
+        slug="first-attraction",
+        name="First",
+        region="Central",
+        description="First attraction.",
+        category="historical",
+        operator_id=test_operator.id,
+    )
+    second = Attraction(
+        slug="second-attraction",
+        name="Second",
+        region="Central",
+        description="Second attraction.",
+        category="historical",
+        operator_id=test_operator.id,
+    )
+    db_session.add_all([first, second])
+    await db_session.commit()
+
+    response = await client.patch(
+        f"{API_PREFIX}/attractions/{second.id}",
+        headers=operator_auth_headers,
+        json={"slug": "first-attraction"},
+    )
+
+    assert response.status_code == 409
+    assert "slug" in response.json()["detail"].lower()
+
+
+@pytest.mark.asyncio
+async def test_create_attraction_writes_audit_log(
+    client: AsyncClient,
+    operator_auth_headers: dict,
+    admin_auth_headers: dict,
+):
+    response = await client.post(
+        f"{API_PREFIX}/attractions/",
+        headers=operator_auth_headers,
+        json=_attraction_payload(slug="audit-trail-park"),
+    )
+    assert response.status_code == 201
+    attraction_id = response.json()["id"]
+
+    logs_response = await client.get(
+        f"{API_PREFIX}/admin/audit-logs",
+        headers=admin_auth_headers,
+        params={"resource_type": "attraction", "action": "attraction.created"},
+    )
+
+    assert logs_response.status_code == 200
+    payload = logs_response.json()
+    assert payload["pagination"]["total"] >= 1
+    matching = [item for item in payload["items"] if item["resource_id"] == attraction_id]
+    assert len(matching) == 1
+    assert matching[0]["action"] == "attraction.created"
+    assert matching[0]["details"]["slug"] == "audit-trail-park"
+
+
+@pytest.mark.asyncio
 async def test_unavailable_approved_attraction_hidden_from_public(
     client: AsyncClient,
     db_session: AsyncSession,

@@ -1,9 +1,10 @@
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.audit_context import build_audit_context
 from app.core.deps import get_current_user, get_db, require_verified_operator
 from app.models.tourism_common import BookingStatus
 from app.models.user import User
@@ -28,11 +29,16 @@ def _pagination(total: int, page: int, per_page: int) -> dict:
 @router.post("/", response_model=BookingResponse, status_code=status.HTTP_201_CREATED)
 async def create_booking(
     payload: BookingCreate,
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     service = BookingService(db)
-    return await service.create_booking(current_user, payload)
+    return await service.create_booking(
+        current_user,
+        payload,
+        audit_context=build_audit_context(request, current_user),
+    )
 
 
 @router.get("/", response_model=BookingListResponse)
@@ -90,29 +96,45 @@ async def get_booking(
 async def update_booking(
     booking_id: UUID,
     payload: BookingUpdate,
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     service = BookingService(db)
-    return await service.update_booking(booking_id, current_user.id, payload)
+    return await service.update_booking(
+        booking_id,
+        current_user.id,
+        payload,
+        audit_context=build_audit_context(request, current_user),
+    )
 
 
 @router.patch("/{booking_id}/cancel", response_model=BookingResponse)
 async def cancel_booking(
     booking_id: UUID,
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     service = BookingService(db)
-    return await service.cancel_booking(booking_id, current_user.id)
+    return await service.cancel_booking(
+        booking_id,
+        current_user.id,
+        audit_context=build_audit_context(request, current_user),
+    )
 
 
 @router.patch("/{booking_id}/confirm", response_model=BookingResponse)
 async def confirm_booking(
     booking_id: UUID,
+    request: Request,
     current_user: User = Depends(require_verified_operator),
     db: AsyncSession = Depends(get_db),
 ):
     """Confirm a pending booking and issue a QR code token for entry."""
     service = BookingService(db)
-    return await service.confirm_booking(booking_id, current_user)
+    return await service.confirm_booking(
+        booking_id,
+        current_user,
+        audit_context=build_audit_context(request, current_user),
+    )
