@@ -24,8 +24,8 @@ from loguru import logger
 
 from app.api.v1.router import api_router
 from app.core.config import settings
-from app.core.logging import setup_logging
 from app.core.database import init_db
+from app.core.logging import setup_logging
 
 
 # build safe lists manually so TrustedHost/CORS don't depend on Settings parsing
@@ -110,9 +110,6 @@ async def health_check():
 
 # Include versioned API router
 app.include_router(api_router, prefix=f"/api/{settings.API_VERSION}")
-
-
-
 
 
 if __name__ == "__main__":

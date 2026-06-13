@@ -29,11 +29,15 @@ async def create_review(
     verified_booking = False
     if payload.booking_id:
         result = await db.execute(
-            select(Booking).where(Booking.id == payload.booking_id, Booking.tourist_id == current_user.id)
+            select(Booking).where(
+                Booking.id == payload.booking_id, Booking.tourist_id == current_user.id
+            )
         )
         booking = result.scalar_one_or_none()
         if not booking or booking.attraction_id != payload.attraction_id:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid booking reference")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid booking reference"
+            )
         verified_booking = True
 
     review = Review(
@@ -71,7 +75,9 @@ async def list_reviews(
         count_query = count_query.where(Review.reviewer_id == reviewer_id)
 
     total = (await db.execute(count_query)).scalar_one()
-    result = await db.execute(query.order_by(Review.created_at.desc()).offset((page - 1) * per_page).limit(per_page))
+    result = await db.execute(
+        query.order_by(Review.created_at.desc()).offset((page - 1) * per_page).limit(per_page)
+    )
     items = result.scalars().all()
 
     total_pages = (total + per_page - 1) // per_page if per_page else 0

@@ -92,8 +92,12 @@ async def get_audit_logs(
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=200),
     user_id: Optional[uuid.UUID] = Query(None, description="Filter by acting user"),
-    action: Optional[str] = Query(None, description="Filter by action code (e.g. attraction.created)"),
-    resource_type: Optional[str] = Query(None, description="Filter by resource type (e.g. attraction, booking)"),
+    action: Optional[str] = Query(
+        None, description="Filter by action code (e.g. attraction.created)"
+    ),
+    resource_type: Optional[str] = Query(
+        None, description="Filter by resource type (e.g. attraction, booking)"
+    ),
     resource_id: Optional[uuid.UUID] = Query(None, description="Filter by resource ID"),
     current_user: User = Depends(require_permission("audit.view")),
     db: AsyncSession = Depends(get_db),

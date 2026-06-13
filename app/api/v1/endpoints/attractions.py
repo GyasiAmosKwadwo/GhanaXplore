@@ -45,7 +45,9 @@ async def list_attractions(
     operator_id: Optional[UUID] = Query(None, description="Filter by operator ID"),
     status: Optional[str] = Query(None, description="Filter by attraction status"),
     is_available: Optional[bool] = Query(None, description="Filter by availability"),
-    search: Optional[str] = Query(None, description="Search by name, description, region, location, or district"),
+    search: Optional[str] = Query(
+        None, description="Search by name, description, region, location, or district"
+    ),
     sort_by: str = Query("created_at", description="Sort by field"),
     sort_order: str = Query("desc", regex="^(asc|desc)$", description="Sort order"),
     page: int = Query(1, ge=1),
@@ -69,7 +71,9 @@ async def list_attractions(
         filters["search"] = search
 
     service = AttractionService(db)
-    attractions, total = await service.list_public_attractions(filters, skip, per_page, sort_by=sort_by, sort_order=sort_order)
+    attractions, total = await service.list_public_attractions(
+        filters, skip, per_page, sort_by=sort_by, sort_order=sort_order
+    )
 
     total_pages = (total + per_page - 1) // per_page if per_page else 0
     return {
@@ -93,7 +97,9 @@ async def list_operator_attractions_by_id(
     region: Optional[str] = Query(None, description="Filter by region"),
     status: Optional[str] = Query(None, description="Filter by attraction status"),
     is_available: Optional[bool] = Query(None, description="Filter by availability"),
-    search: Optional[str] = Query(None, description="Search by name, description, region, location, or district"),
+    search: Optional[str] = Query(
+        None, description="Search by name, description, region, location, or district"
+    ),
     sort_by: str = Query("created_at", description="Sort by field"),
     sort_order: str = Query("desc", regex="^(asc|desc)$", description="Sort order"),
     page: int = Query(1, ge=1),
@@ -115,7 +121,9 @@ async def list_operator_attractions_by_id(
         filters["search"] = search
 
     service = AttractionService(db)
-    attractions, total = await service.list_public_attractions(filters, skip, per_page, sort_by=sort_by, sort_order=sort_order)
+    attractions, total = await service.list_public_attractions(
+        filters, skip, per_page, sort_by=sort_by, sort_order=sort_order
+    )
 
     total_pages = (total + per_page - 1) // per_page if per_page else 0
     return {
@@ -138,7 +146,9 @@ async def list_my_attractions(
     region: Optional[str] = Query(None, description="Filter by region"),
     status: Optional[str] = Query(None, description="Filter by attraction status"),
     is_available: Optional[bool] = Query(None, description="Filter by availability"),
-    search: Optional[str] = Query(None, description="Search by name, description, region, location, or district"),
+    search: Optional[str] = Query(
+        None, description="Search by name, description, region, location, or district"
+    ),
     sort_by: str = Query("created_at", description="Sort by field"),
     sort_order: str = Query("desc", regex="^(asc|desc)$", description="Sort order"),
     page: int = Query(1, ge=1),

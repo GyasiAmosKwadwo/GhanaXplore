@@ -8,7 +8,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.deps import get_db, require_verified_operator
 from app.models.attraction import Attraction
 from app.models.time_slot import TimeSlot
-from app.schemas.time_slot import TimeSlotCreate, TimeSlotListResponse, TimeSlotResponse, TimeSlotUpdate
+from app.schemas.time_slot import (
+    TimeSlotCreate,
+    TimeSlotListResponse,
+    TimeSlotResponse,
+    TimeSlotUpdate,
+)
 
 router = APIRouter(prefix="/time-slots", tags=["Time Slots"])
 
@@ -24,7 +29,10 @@ async def create_time_slot(
     if not attraction:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Attraction not found")
     if attraction.operator_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only the attraction owner may manage time slots")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the attraction owner may manage time slots",
+        )
 
     time_slot = TimeSlot(
         attraction_id=payload.attraction_id,
@@ -54,7 +62,9 @@ async def list_time_slots(
         count_query = count_query.where(TimeSlot.attraction_id == attraction_id)
 
     total = (await db.execute(count_query)).scalar_one()
-    result = await db.execute(query.order_by(TimeSlot.start_time.asc()).offset((page - 1) * per_page).limit(per_page))
+    result = await db.execute(
+        query.order_by(TimeSlot.start_time.asc()).offset((page - 1) * per_page).limit(per_page)
+    )
     items = result.scalars().all()
 
     total_pages = (total + per_page - 1) // per_page if per_page else 0
@@ -86,7 +96,10 @@ async def update_time_slot(
     result = await db.execute(select(Attraction).where(Attraction.id == time_slot.attraction_id))
     attraction = result.scalar_one_or_none()
     if not attraction or attraction.operator_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only the attraction owner may update time slots")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the attraction owner may update time slots",
+        )
 
     update_data = payload.dict(exclude_unset=True)
     for key, value in update_data.items():
@@ -111,7 +124,10 @@ async def delete_time_slot(
     result = await db.execute(select(Attraction).where(Attraction.id == time_slot.attraction_id))
     attraction = result.scalar_one_or_none()
     if not attraction or attraction.operator_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only the attraction owner may delete time slots")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the attraction owner may delete time slots",
+        )
 
     await db.delete(time_slot)
     await db.flush()

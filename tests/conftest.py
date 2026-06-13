@@ -15,14 +15,14 @@ from app.core.security import SecurityService
 from app.main import app
 
 API_PREFIX = f"/api/{settings.API_VERSION}"
+# Test database URL — override via TEST_DATABASE_URL env for CI/docker.
+import os
+
 from app.models.attraction import Attraction
 from app.models.role import Permission, Role, user_roles
 from app.models.time_slot import TimeSlot
 from app.models.tourism_common import ApprovalStatus, AttractionStatus
 from app.models.user import User, UserRole
-
-# Test database URL — override via TEST_DATABASE_URL env for CI/docker.
-import os
 
 TEST_DATABASE_URL = os.getenv(
     "TEST_DATABASE_URL",
@@ -119,6 +119,7 @@ OPERATOR_PERMISSION_CODES = [
     "booking.manage",
 ]
 
+
 async def _get_or_create_permissions(
     db_session: AsyncSession,
     permission_codes: list[str],
@@ -170,9 +171,7 @@ async def _assign_role_with_permissions(
         role.permissions = permissions
         await db_session.flush()
 
-    await db_session.execute(
-        user_roles.insert().values(user_id=user.id, role_id=role.id)
-    )
+    await db_session.execute(user_roles.insert().values(user_id=user.id, role_id=role.id))
     await db_session.commit()
     await db_session.refresh(user)
 
@@ -210,9 +209,7 @@ async def test_operator(db_session: AsyncSession) -> User:
     db_session.add(operator)
     await db_session.commit()
     await db_session.refresh(operator)
-    await _assign_role_with_permissions(
-        db_session, operator, "operator", OPERATOR_PERMISSION_CODES
-    )
+    await _assign_role_with_permissions(db_session, operator, "operator", OPERATOR_PERMISSION_CODES)
     return operator
 
 

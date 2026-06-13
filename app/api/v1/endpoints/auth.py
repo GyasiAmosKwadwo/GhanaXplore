@@ -43,7 +43,9 @@ async def login(
     auth_service = AuthService(db, redis)
 
     # Authenticate user
-    user, is_first_time = await auth_service.authenticate_user(credentials.email, credentials.password)
+    user, is_first_time = await auth_service.authenticate_user(
+        credentials.email, credentials.password
+    )
 
     ip_address = request.client.host
     user_agent = request.headers.get("user-agent", "")

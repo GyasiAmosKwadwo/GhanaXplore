@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, JSON, String
+from sqlalchemy import JSON, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -13,7 +13,10 @@ class OfflineBundle(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
     attraction_id = Column(
-        UUID(as_uuid=True), ForeignKey("attractions.id", ondelete="CASCADE"), nullable=False, unique=True
+        UUID(as_uuid=True),
+        ForeignKey("attractions.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
     )
     content_payload = Column(JSON, nullable=False, default=dict)
     compressed_images_url = Column(String(500), nullable=True)

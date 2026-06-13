@@ -1,4 +1,4 @@
-from sqlalchemy import select, or_, func
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -16,13 +16,17 @@ class AttractionRepository:
 
     async def get_by_id(self, attraction_id):
         result = await self.db.execute(
-            select(Attraction).options(selectinload(Attraction.activities)).where(Attraction.id == attraction_id)
+            select(Attraction)
+            .options(selectinload(Attraction.activities))
+            .where(Attraction.id == attraction_id)
         )
         return result.scalar_one_or_none()
 
     async def get_by_slug(self, slug: str) -> Attraction | None:
         result = await self.db.execute(
-            select(Attraction).options(selectinload(Attraction.activities)).where(Attraction.slug == slug)
+            select(Attraction)
+            .options(selectinload(Attraction.activities))
+            .where(Attraction.slug == slug)
         )
         return result.scalar_one_or_none()
 
@@ -40,7 +44,9 @@ class AttractionRepository:
             if filters.get("operator_id") is not None:
                 query = query.where(Attraction.operator_id == filters["operator_id"])
             if filters.get("approval_status") is not None:
-                status_value = getattr(filters["approval_status"], "value", filters["approval_status"])
+                status_value = getattr(
+                    filters["approval_status"], "value", filters["approval_status"]
+                )
                 query = query.where(Attraction.approval_status == status_value)
             if filters.get("status") is not None:
                 status_value = getattr(filters["status"], "value", filters["status"])
@@ -71,7 +77,9 @@ class AttractionRepository:
         else:
             query = query.order_by(sort_by_attr.desc())
 
-        result = await self.db.execute(query.options(selectinload(Attraction.activities)).offset(skip).limit(limit))
+        result = await self.db.execute(
+            query.options(selectinload(Attraction.activities)).offset(skip).limit(limit)
+        )
         return result.scalars().all()
 
     async def count(self, filters: dict | None = None) -> int:
@@ -81,7 +89,9 @@ class AttractionRepository:
             if filters.get("operator_id") is not None:
                 query = query.where(Attraction.operator_id == filters["operator_id"])
             if filters.get("approval_status") is not None:
-                status_value = getattr(filters["approval_status"], "value", filters["approval_status"])
+                status_value = getattr(
+                    filters["approval_status"], "value", filters["approval_status"]
+                )
                 query = query.where(Attraction.approval_status == status_value)
             if filters.get("status") is not None:
                 status_value = getattr(filters["status"], "value", filters["status"])

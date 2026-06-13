@@ -35,11 +35,17 @@ class AttractionService:
     ) -> Attraction:
         # Only operators may create attractions
         if user.role != UserRole.OPERATOR:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only operator accounts can create attractions")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only operator accounts can create attractions",
+            )
 
         # Require operator account verification before publishing
         if not user.is_verified:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Operator account must be verified before creating attractions")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Operator account must be verified before creating attractions",
+            )
 
         await self._ensure_slug_available(data.slug)
 
@@ -81,7 +87,9 @@ class AttractionService:
                     restrictions=activity.restrictions,
                     images=activity.images,
                     metadata_=activity.metadata,
-                    is_available=activity.is_available if activity.is_available is not None else True,
+                    is_available=activity.is_available
+                    if activity.is_available is not None
+                    else True,
                     requires_advance_booking=activity.requires_advance_booking or False,
                     display_order=activity.display_order,
                 )
@@ -171,13 +179,21 @@ class AttractionService:
     ) -> Attraction:
         attraction = await self.repo.get_by_id(attraction_id)
         if not attraction:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Attraction not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Attraction not found"
+            )
 
         if user.role == UserRole.OPERATOR and attraction.operator_id != user.id:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Operators may only update their own attractions")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Operators may only update their own attractions",
+            )
 
         if user.role not in {UserRole.OPERATOR, UserRole.ADMINISTRATOR}:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only operators or administrators can update attractions")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only operators or administrators can update attractions",
+            )
 
         restricted_keys = {"operator_id", "approval_status"}
         update_data = {k: v for k, v in data.items() if k not in restricted_keys}
@@ -195,7 +211,9 @@ class AttractionService:
 
         updated_attraction = await self.repo.update(attraction_id, update_data)
         if not updated_attraction:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Attraction not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Attraction not found"
+            )
 
         try:
             if audit_context:
@@ -223,7 +241,9 @@ class AttractionService:
     ) -> Attraction:
         attraction = await self.repo.get_by_id(attraction_id)
         if not attraction:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Attraction not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Attraction not found"
+            )
 
         previous_status = attraction.approval_status
         previous_attraction_status = attraction.status
@@ -250,7 +270,9 @@ class AttractionService:
                 changes={
                     "before": {
                         "approval_status": getattr(previous_status, "value", previous_status),
-                        "status": getattr(previous_attraction_status, "value", previous_attraction_status),
+                        "status": getattr(
+                            previous_attraction_status, "value", previous_attraction_status
+                        ),
                     },
                     "after": {
                         "approval_status": approval_status.value,
@@ -272,13 +294,21 @@ class AttractionService:
     ) -> None:
         attraction = await self.repo.get_by_id(attraction_id)
         if not attraction:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Attraction not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Attraction not found"
+            )
 
         if user.role == UserRole.OPERATOR and attraction.operator_id != user.id:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Operators may only delete their own attractions")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Operators may only delete their own attractions",
+            )
 
         if user.role not in {UserRole.OPERATOR, UserRole.ADMINISTRATOR}:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only operators or administrators can delete attractions")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only operators or administrators can delete attractions",
+            )
 
         snapshot = {"slug": attraction.slug, "name": attraction.name, "region": attraction.region}
 

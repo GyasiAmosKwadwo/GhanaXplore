@@ -2,18 +2,18 @@ from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
     admin,
+    attractions,
     auth,
     bookings,
     favorites,
     notifications,
     password,
     profiles,
-    roles,
     reviews,
+    roles,
     schedules,
     time_slots,
     users,
-    attractions,
 )
 
 api_router = APIRouter()

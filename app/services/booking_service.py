@@ -5,6 +5,7 @@ from decimal import Decimal
 from uuid import UUID
 
 from fastapi import HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.audit_context import AuditContext
@@ -16,7 +17,6 @@ from app.models.user import User, UserRole
 from app.repositories.booking_repository import BookingRepository
 from app.schemas.booking import BookingCreate, BookingUpdate
 from app.services.audit_service import AuditAction, AuditService
-from sqlalchemy import select
 
 
 class BookingService:
@@ -48,9 +48,7 @@ class BookingService:
             )
         return attraction
 
-    async def _get_valid_time_slot(
-        self, time_slot_id: UUID, attraction_id: UUID
-    ) -> TimeSlot:
+    async def _get_valid_time_slot(self, time_slot_id: UUID, attraction_id: UUID) -> TimeSlot:
         result = await self.db.execute(select(TimeSlot).where(TimeSlot.id == time_slot_id))
         time_slot = result.scalar_one_or_none()
         if not time_slot or time_slot.attraction_id != attraction_id or not time_slot.is_active:
@@ -241,7 +239,9 @@ class BookingService:
             )
 
         next_visit_date = payload.visit_date or booking.visit_date
-        next_party_size = payload.party_size if payload.party_size is not None else booking.party_size
+        next_party_size = (
+            payload.party_size if payload.party_size is not None else booking.party_size
+        )
         next_time_slot_id = (
             payload.time_slot_id if payload.time_slot_id is not None else booking.time_slot_id
         )

@@ -8,8 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.security import SecurityService
 from app.models.operator_profile import OperatorProfile
-from app.models.tourist_profile import TouristProfile
 from app.models.role import Role
+from app.models.tourist_profile import TouristProfile
 from app.models.user import User, UserRole
 from app.repositories.role_repository import RoleRepository
 from app.repositories.user_repository import UserRepository
@@ -40,7 +40,8 @@ class AuthService:
         existing_user = await self.user_repo.get_by_email(email)
         if existing_user:
             raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT, detail="An account with this email already exists"
+                status_code=status.HTTP_409_CONFLICT,
+                detail="An account with this email already exists",
             )
 
         if phone_number:
@@ -99,9 +100,7 @@ class AuthService:
             requires_review=requires_review,
         )
 
-    async def authenticate_user(
-        self, email: str, password: str
-    ) -> Tuple[Optional[User], bool]:
+    async def authenticate_user(self, email: str, password: str) -> Tuple[Optional[User], bool]:
         """
         Authenticate user and return (user, is_first_time)
         """

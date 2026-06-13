@@ -28,7 +28,10 @@ class Review(Base):
         UUID(as_uuid=True), ForeignKey("guide_profiles.id", ondelete="SET NULL"), nullable=True
     )
     booking_id = Column(
-        UUID(as_uuid=True), ForeignKey("bookings.id", ondelete="SET NULL"), nullable=True, unique=True
+        UUID(as_uuid=True),
+        ForeignKey("bookings.id", ondelete="SET NULL"),
+        nullable=True,
+        unique=True,
     )
     rating = Column(Integer, nullable=False)
     comment = Column(Text, nullable=True)

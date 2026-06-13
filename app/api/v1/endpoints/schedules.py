@@ -8,7 +8,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.deps import get_db, require_verified_operator
 from app.models.attraction import Attraction
 from app.models.schedule import Schedule
-from app.schemas.schedule import ScheduleCreate, ScheduleListResponse, ScheduleResponse, ScheduleUpdate
+from app.schemas.schedule import (
+    ScheduleCreate,
+    ScheduleListResponse,
+    ScheduleResponse,
+    ScheduleUpdate,
+)
 
 router = APIRouter(prefix="/schedules", tags=["Schedules"])
 
@@ -24,7 +29,10 @@ async def create_schedule(
     if not attraction:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Attraction not found")
     if attraction.operator_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only the attraction owner may manage schedules")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the attraction owner may manage schedules",
+        )
 
     schedule = Schedule(
         attraction_id=payload.attraction_id,
@@ -57,7 +65,9 @@ async def list_schedules(
         count_query = count_query.where(Schedule.attraction_id == attraction_id)
 
     total = (await db.execute(count_query)).scalar_one()
-    result = await db.execute(query.order_by(Schedule.day_of_week.asc()).offset((page - 1) * per_page).limit(per_page))
+    result = await db.execute(
+        query.order_by(Schedule.day_of_week.asc()).offset((page - 1) * per_page).limit(per_page)
+    )
     items = result.scalars().all()
 
     return {
@@ -88,7 +98,10 @@ async def update_schedule(
     result = await db.execute(select(Attraction).where(Attraction.id == schedule.attraction_id))
     attraction = result.scalar_one_or_none()
     if not attraction or attraction.operator_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only the attraction owner may update schedules")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the attraction owner may update schedules",
+        )
 
     update_data = payload.dict(exclude_unset=True)
     for key, value in update_data.items():
@@ -113,7 +126,10 @@ async def delete_schedule(
     result = await db.execute(select(Attraction).where(Attraction.id == schedule.attraction_id))
     attraction = result.scalar_one_or_none()
     if not attraction or attraction.operator_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only the attraction owner may delete schedules")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the attraction owner may delete schedules",
+        )
 
     await db.delete(schedule)
     await db.flush()

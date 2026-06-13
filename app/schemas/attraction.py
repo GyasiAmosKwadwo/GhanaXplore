@@ -1,9 +1,9 @@
+from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field
-from datetime import datetime
 
 from app.models.tourism_common import ApprovalStatus, AttractionStatus
 from app.schemas.user import Pagination
@@ -66,7 +66,6 @@ class AttractionBase(BaseModel):
     is_offline_available: Optional[bool] = None
     metadata: Dict[str, Any] = Field(default_factory=dict)
     activities: List[AttractionActivityCreate] = Field(default_factory=list)
-
 
 
 class AttractionCreate(AttractionBase):

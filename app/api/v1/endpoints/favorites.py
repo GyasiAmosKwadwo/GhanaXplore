@@ -31,7 +31,9 @@ async def create_favorite(
         )
     )
     if existing.scalar_one_or_none():
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Attraction already favorited")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Attraction already favorited"
+        )
 
     favorite = Favorite(user_id=current_user.id, attraction_id=payload.attraction_id)
     db.add(favorite)
@@ -49,13 +51,17 @@ async def list_favorites(
     db: AsyncSession = Depends(get_db),
 ):
     query = select(Favorite).where(Favorite.user_id == current_user.id)
-    count_query = select(func.count()).select_from(Favorite).where(Favorite.user_id == current_user.id)
+    count_query = (
+        select(func.count()).select_from(Favorite).where(Favorite.user_id == current_user.id)
+    )
     if attraction_id:
         query = query.where(Favorite.attraction_id == attraction_id)
         count_query = count_query.where(Favorite.attraction_id == attraction_id)
 
     total = (await db.execute(count_query)).scalar_one()
-    result = await db.execute(query.order_by(Favorite.created_at.desc()).offset((page - 1) * per_page).limit(per_page))
+    result = await db.execute(
+        query.order_by(Favorite.created_at.desc()).offset((page - 1) * per_page).limit(per_page)
+    )
     items = result.scalars().all()
 
     total_pages = (total + per_page - 1) // per_page if per_page else 0

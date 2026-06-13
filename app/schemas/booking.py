@@ -28,7 +28,6 @@ class BookingUpdate(BaseModel):
     visit_date: Optional[date] = None
 
 
-
 class BookingResponse(BaseModel):
     id: UUID
     tourist_id: UUID

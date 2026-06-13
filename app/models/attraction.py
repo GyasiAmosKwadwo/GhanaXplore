@@ -1,6 +1,18 @@
 import uuid
 
-from sqlalchemy import Boolean, Column, DateTime, Enum, Float, ForeignKey, Integer, JSON, Numeric, String, Text
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    Enum,
+    Float,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    Text,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -29,10 +41,10 @@ class Attraction(Base):
 
     readiness_score = Column(Integer, nullable=False, default=5)
     accessibility_rating = Column(Integer, nullable=True)
-    approval_status = Column(
-        Enum(ApprovalStatus), nullable=False, default=ApprovalStatus.PENDING
+    approval_status = Column(Enum(ApprovalStatus), nullable=False, default=ApprovalStatus.PENDING)
+    status = Column(
+        Enum(AttractionStatus), nullable=False, default=AttractionStatus.PENDING_APPROVAL
     )
-    status = Column(Enum(AttractionStatus), nullable=False, default=AttractionStatus.PENDING_APPROVAL)
     images = Column(JSON, nullable=False, default=list)
     amenities = Column(JSON, nullable=False, default=list)
     includes = Column(JSON, nullable=False, default=list)
@@ -66,7 +78,3 @@ class Attraction(Base):
         cascade="all, delete-orphan",
         order_by="AttractionActivity.display_order",
     )
-
-
-
-   

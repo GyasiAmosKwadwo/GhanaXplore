@@ -6,12 +6,12 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from tests.conftest import API_PREFIX
 from app.models.attraction import Attraction
 from app.models.booking import Booking
 from app.models.time_slot import TimeSlot
 from app.models.tourism_common import ApprovalStatus, AttractionStatus, BookingStatus
 from app.models.user import User
+from tests.conftest import API_PREFIX
 
 
 @pytest.mark.asyncio

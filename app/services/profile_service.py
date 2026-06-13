@@ -5,10 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.operator_profile import OperatorProfile
 from app.models.tourist_profile import TouristProfile
 from app.models.user import User, UserRole
-from app.schemas.profile import (
-    OperatorProfileUpdate,
-    TouristProfileUpdate,
-)
+from app.schemas.profile import OperatorProfileUpdate, TouristProfileUpdate
 
 
 class ProfileService:
@@ -34,7 +31,9 @@ class ProfileService:
         await self.db.refresh(profile)
         return profile
 
-    async def update_tourist_profile(self, user: User, data: TouristProfileUpdate) -> TouristProfile:
+    async def update_tourist_profile(
+        self, user: User, data: TouristProfileUpdate
+    ) -> TouristProfile:
         profile = await self.get_or_create_tourist_profile(user)
         for key, value in data.model_dump(exclude_unset=True).items():
             setattr(profile, key, value)
@@ -57,7 +56,9 @@ class ProfileService:
         await self.db.refresh(profile)
         return profile
 
-    async def update_operator_profile(self, user: User, data: OperatorProfileUpdate) -> OperatorProfile:
+    async def update_operator_profile(
+        self, user: User, data: OperatorProfileUpdate
+    ) -> OperatorProfile:
         profile = await self.get_or_create_operator_profile(user)
         for key, value in data.model_dump(exclude_unset=True).items():
             setattr(profile, key, value)

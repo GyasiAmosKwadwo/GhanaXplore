@@ -2,10 +2,10 @@ import enum
 import uuid
 
 from sqlalchemy import Boolean, Column, DateTime, Integer, String
-from sqlalchemy.types import TypeDecorator
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from sqlalchemy.types import TypeDecorator
 
 from app.core.database import Base
 from app.models.role import user_roles

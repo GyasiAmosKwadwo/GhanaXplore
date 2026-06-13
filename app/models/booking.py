@@ -26,7 +26,10 @@ class Booking(Base):
         UUID(as_uuid=True), ForeignKey("guide_profiles.id", ondelete="SET NULL"), nullable=True
     )
     time_slot_id = Column(
-        UUID(as_uuid=True), ForeignKey("time_slots.id", ondelete="SET NULL"), nullable=True, index=True
+        UUID(as_uuid=True),
+        ForeignKey("time_slots.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
     )
     booking_reference = Column(String(64), unique=True, nullable=False, index=True)
     booking_date = Column(DateTime(timezone=True), nullable=False, server_default=func.now())

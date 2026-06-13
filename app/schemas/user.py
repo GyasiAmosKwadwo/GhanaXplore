@@ -52,7 +52,7 @@ class UserInDB(UserBase):
     id: uuid.UUID
     is_active: bool
     is_verified: bool
-    role:str
+    role: str
     last_login: Optional[datetime]
     created_at: datetime
     updated_at: datetime
@@ -71,9 +71,10 @@ class UserResponse(BaseModel):
     is_active: bool
     is_verified: bool
     last_login: Optional[datetime]
-    
+
     class Config:
         from_attributes = True
+
 
 class Pagination(BaseModel):
     page: int

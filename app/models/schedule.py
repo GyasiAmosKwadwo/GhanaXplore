@@ -12,7 +12,12 @@ class Schedule(Base):
     __tablename__ = "schedules"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
-    attraction_id = Column(UUID(as_uuid=True), ForeignKey("attractions.id", ondelete="CASCADE"), nullable=False, index=True)
+    attraction_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("attractions.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     day_of_week = Column(Integer, nullable=False)
     open_time = Column(String(10), nullable=False)
     close_time = Column(String(10), nullable=False)

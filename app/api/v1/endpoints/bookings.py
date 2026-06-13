@@ -43,7 +43,9 @@ async def create_booking(
 
 @router.get("/", response_model=BookingListResponse)
 async def list_bookings(
-    status_filter: Optional[BookingStatus] = Query(None, alias="status", description="Filter bookings by status"),
+    status_filter: Optional[BookingStatus] = Query(
+        None, alias="status", description="Filter bookings by status"
+    ),
     attraction_id: Optional[UUID] = Query(None, description="Filter by attraction"),
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
@@ -64,7 +66,9 @@ async def list_bookings(
 @router.get("/managed", response_model=BookingListResponse)
 async def list_managed_bookings(
     attraction_id: Optional[UUID] = Query(None, description="Filter by attraction"),
-    status_filter: Optional[BookingStatus] = Query(None, alias="status", description="Filter bookings by status"),
+    status_filter: Optional[BookingStatus] = Query(
+        None, alias="status", description="Filter bookings by status"
+    ),
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
     current_user: User = Depends(require_verified_operator),
